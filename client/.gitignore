@@ -28,3 +28,27 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Vite cache
+node_modules/.vite
+
+# Local env files
+.env.local
+.env.*.local
+
+# Mac system files
+.AppleDouble
+.LSOverride
+
+# VS Code workspace files
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+
+# npm/yarn/pnpm lock files (uncomment if not used)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Test output
+test-results/
