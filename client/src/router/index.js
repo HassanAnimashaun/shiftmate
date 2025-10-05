@@ -1,12 +1,12 @@
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createWebHistory, createRouter } from 'vue-router'
 
 import Login from '../views/Login.vue'
 
 export const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHistory(),
   routes: [
     {
-      path: '/',
+      path: '/login',
       name: 'Login',
       component: Login,
     },
