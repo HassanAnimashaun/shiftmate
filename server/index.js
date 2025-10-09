@@ -6,6 +6,7 @@ const {connectDB} = require("./db");
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
+const staffRoutes = require('./routes/staffRoutes')
 
 // Initialize Express App
 const app = express();
@@ -29,3 +30,4 @@ app.listen(PORT, async () => {
 
 // Routes
 app.use("/api/auth", authRoutes)
+app.use("/api/staff", staffRoutes)

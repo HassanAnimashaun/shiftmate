@@ -1,7 +1,7 @@
-import { createWebHistory, createRouter } from 'vue-router'
+import { createWebHistory, createRouter } from 'vue-router';
 
-import Login from '@/views/Login.vue'
-import Dashboard from '@/views/Dashboard.vue';
+import Login from '@/views/Login.vue';
+import Dashboard from '@/views/admin/AdminDashboard.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -17,12 +17,11 @@ export const router = createRouter({
     },
     {
       path: '/dashboard',
-      name: 'dashboard',
+      name: 'AdminDashboard-page',
       component: Dashboard,
     },
   ],
-})
-
+});
 
 // router.beforeEach((to, from, next) => {
 //   const token = localStorage.getItem("token");

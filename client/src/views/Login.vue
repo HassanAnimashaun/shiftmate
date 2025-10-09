@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex h-screen justify-center items-center bg-gradient-to-t from-indigo-400 to-purple-500"
+    class="flex h-screen justify-center items-center"
   >
     <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
       <!-- HEADER -->
