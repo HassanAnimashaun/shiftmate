@@ -2,11 +2,11 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const {connectDB} = require("./db");
+const { connectDB } = require("./db");
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
-const staffRoutes = require('./routes/staffRoutes')
+const staffRoutes = require("./routes/staffRoutes");
 
 // Initialize Express App
 const app = express();
@@ -15,7 +15,6 @@ app.use(cors());
 
 // Environment Variables
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET;
 
 // Start Server and Connect to Database
 app.listen(PORT, async () => {
@@ -29,5 +28,5 @@ app.listen(PORT, async () => {
 });
 
 // Routes
-app.use("/api/auth", authRoutes)
-app.use("/api/staff", staffRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/staff", staffRoutes);
