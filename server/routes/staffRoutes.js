@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const { connectDB } = require('../db')
+const verifyToken = require('../middleware/authMiddleware')
 
 // GET /api/staff — fetch all staff members
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const db = await connectDB()
     const staffList = await db.collection('staff').find({}).toArray()

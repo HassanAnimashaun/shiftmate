@@ -82,13 +82,11 @@ export default {
     },
     async handleLogin() {
       try {
-        const data = await authService.login({
+        await authService.login({
           username: this.username,
           password: this.password,
         });
-        localStorage.setItem('token', data.token);
-        this.error = data.msg;
-
+        this.error = '';
         this.$router.push('/dashboard');
       } catch (err) {
         this.error = err.response?.data?.msg || 'Server error';

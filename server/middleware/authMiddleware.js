@@ -1,19 +1,32 @@
 const jwt = require("jsonwebtoken");
 
-function verifyToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader)
-    return res.status(401).json({ message: "No token provided" });
+const JWT_SECRET = process.env.JWT_SECRET;
 
-  const token = authHeader.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Malformed token" });
+function verifyToken(req, res, next) {
+  const tokenFromCookie = req.cookies && req.cookies.token;
+  const authHeader = req.headers["authorization"];
+  const tokenFromHeader =
+    authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+
+  const token = tokenFromCookie || tokenFromHeader;
+
+  if (!token) {
+    return res.status(401).json({ msg: "Authentication required" });
+  }
+
+  if (!JWT_SECRET) {
+    return res.status(500).json({ msg: "Authentication service misconfigured" });
+  }
 
   try {
-    const decoded = jwt.verifyToken(token);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ msg: "Invalid Token" });
+    console.error("JWT verification failed", err);
+    res.status(401).json({ msg: "Invalid token" });
   }
 }
 
