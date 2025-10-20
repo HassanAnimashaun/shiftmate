@@ -1,5 +1,7 @@
 <template>
-  <div class="flex h-screen justify-center items-center">
+  <div class="flex flex-col h-screen justify-center items-center">
+    <!-- LOGO -->
+    <img class="w-60 mx-auto" src="/logo.png" alt="ShiftMate Logo" />
     <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
       <!-- HEADER -->
       <div class="text-center mb-6">

@@ -26,14 +26,14 @@ export const router = createRouter({
       path: '/dashboard',
       name: 'AdminDashboard-page',
       component: Dashboard,
-      meta: { requiresAuth: true },
+      // meta: { requiresAuth: true },
     },
   ],
 });
 
 router.beforeEach(async (to, from, next) => {
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
-  const requiresGuest = to.matched.some((record) => record.meta.requiresGuest);
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
 
   if (!requiresAuth && !requiresGuest) {
     return next();
