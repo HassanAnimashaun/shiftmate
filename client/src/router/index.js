@@ -26,7 +26,7 @@ export const router = createRouter({
       path: '/dashboard',
       name: 'AdminDashboard-page',
       component: Dashboard,
-      // meta: { requiresAuth: true },
+      meta: { requiresAuth: true },
     },
   ],
 });
