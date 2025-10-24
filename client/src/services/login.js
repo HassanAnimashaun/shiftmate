@@ -2,20 +2,38 @@ let userCache = null;
 let fetchPromise = null;
 let loggedOut = false;
 
+import api from '@/services/api';
+
+async function login(credentials) {
+  try {
+    const res = await api.post('/auth/login', credentials, {
+      withCredentials: true,
+    });
+
+    userCache = res.data?.user ?? null;
+    loggedOut = false;
+    return userCache;
+  } catch (err) {
+    userCache = null;
+    console.error('Login failed:', err.response?.data || err.message);
+    throw err.response?.data || { msg: 'Login failed' };
+  }
+}
+
 async function fetchCurrentUser() {
   if (userCache) return userCache;
   if (fetchPromise) return fetchPromise;
 
   fetchPromise = api
     .get('/auth/me', { withCredentials: true })
-    .then((res) => {
-      if (loggedOut) return null; // Ignore response after logout
+    .then(res => {
+      if (loggedOut) return null;
       userCache = res.data?.user ?? null;
       fetchPromise = null;
       return userCache;
     })
-    .catch(() => {
-      if (!loggedOut) {
+    .catch(err => {
+      if (!loggedOut && err.response?.status === 401) {
         userCache = null;
       }
       fetchPromise = null;
@@ -26,11 +44,18 @@ async function fetchCurrentUser() {
 }
 
 async function logout() {
-  loggedOut = true; // prevent stale overwrite
+  loggedOut = true;
   try {
     await api.post('/auth/logout', {}, { withCredentials: true });
   } finally {
     userCache = null;
     fetchPromise = null;
   }
+  return true;
 }
+
+export default {
+  login,
+  fetchCurrentUser,
+  logout,
+};
