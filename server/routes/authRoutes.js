@@ -5,6 +5,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const { connectDB } = require("../db");
 const JWT = require("jsonwebtoken");
+const { ObjectId } = require("mongodb");
 const verifyToken = require("../middleware/authMiddleware");
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
@@ -18,6 +19,19 @@ const COOKIE_OPTIONS = {
 
 if (!JWT_SECRET) {
   console.warn("JWT_SECRET environment variable is not defined.");
+}
+
+function buildUserResponse(user) {
+  const fallbackNameParts = [user.firstName, user.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    id: user._id.toString(),
+    username: user.username,
+    role: user.role,
+    name: user.name ,
+  };
 }
 
 // Login Route
@@ -47,11 +61,7 @@ router.post("/login", async (req, res) => {
         .json({ msg: "Authentication service misconfigured" });
     }
 
-    const userPayload = {
-      id: user._id.toString(),
-      username: user.username,
-      role: user.role,
-    };
+    const userPayload = buildUserResponse(user);
 
     // Create JWT token
     const token = JWT.sign(userPayload, JWT_SECRET, { expiresIn: "1h" });
@@ -72,8 +82,25 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/me", verifyToken, (req, res) => {
-  res.status(200).json({ user: req.user });
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    const db = await connectDB();
+    const user = await db.collection("staff").findOne(
+      { _id: new ObjectId(req.user.id) },
+      {
+        projection: { password: 0 },
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    res.status(200).json({ user: buildUserResponse(user) });
+  } catch (err) {
+    console.error("Failed to fetch current user", err);
+    res.status(500).json({ msg: "Failed to fetch user profile" });
+  }
 });
 
 router.post("/logout", (req, res) => {

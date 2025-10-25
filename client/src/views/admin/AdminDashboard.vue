@@ -1,11 +1,15 @@
 <template>
-  <div class="grid grid-rows-[auto_1fr] p-6 gap-5">
+  <div class="min-h-screen md:flex flex-col">
     <!-- HEADER -->
     <DashHeader />
-    <!-- MAIN  -->
-    <main class="sidebar grid grid-cols-[250px_1fr] gap-6">
-      <DashSidebar />
-    </main>
+
+    <!-- BODY -->
+    <div class="mx-auto w-full max-w-7xl flex flex-col md:flex-row gap-6">
+      <!-- SIDEBAR -->
+      <aside class="">
+        <DashSidebar />
+      </aside>
+    </div>
   </div>
 </template>
 
