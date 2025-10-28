@@ -2,6 +2,8 @@ import { createWebHistory, createRouter } from 'vue-router';
 
 import Login from '@/views/Login.vue';
 import Dashboard from '@/views/admin/AdminDashboard.vue';
+import EmployeesView from '@/components/employees/EmployeesView.vue';
+import EmployeeForm from '@/components/employees/EmployeeForm.vue';
 import authService from '@/services/login';
 
 async function ensureCurrentUser() {
@@ -23,9 +25,21 @@ export const router = createRouter({
       meta: { requiresGuest: true },
     },
     {
+      path: '/form',
+      name: 'EmployeeForm',
+      component: EmployeeForm,
+    },
+    {
       path: '/dashboard',
       name: 'AdminDashboard-page',
       component: Dashboard,
+      children: [
+        {
+          path: 'employees',
+          name: 'employees',
+          component: EmployeesView,
+        },
+      ],
       meta: { requiresAuth: true },
     },
   ],

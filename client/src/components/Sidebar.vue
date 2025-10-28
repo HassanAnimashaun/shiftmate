@@ -1,42 +1,37 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <nav class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-    <!-- ADMIN -->
-    <div v-if="user?.role === 'admin'">
-      <template class="flex flex-col gap-7 text-lg">
-        <SidebarLink class="nav-item active">📊 Dashboard</SidebarLink>
-        <div class="nav-item">📅 Schedule</div>
-        <div class="nav-item">👥 Employees</div>
-        <div class="nav-item">📝 Time Off Requests</div>
-        <div class="nav-item">📈 Reports</div>
-      </template>
-    </div>
-
-    <!-- EMPLOYEE -->
-    <div v-else-if="user?.role === 'employee'">
-      <template class="flex flex-col gap-7 text-lg">
-        <SidebarLink class="nav-item active">📅 My Schedule</SidebarLink>
-        <div class="nav-item">🏖️ Request Time Off</div>
-        <div class="nav-item">📋 My Requests</div>
-      </template>
-    </div>
+  <nav class="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-3">
+    <router-link
+      v-for="item in menuItems"
+      :key="item.key"
+      :to="item.to"
+      class="flex items-center gap-2 px-3 py-2 rounded-lg"
+      :class="[
+        $route.name === item.key
+          ? 'bg-purple-200 text-purple-800 font-medium'
+          : 'text-gray-700 hover:bg-purple-100',
+      ]"
+    >
+      <span>{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+    </router-link>
   </nav>
 </template>
 
 <script>
-import LoginService from '@/services/login';
 export default {
+  props: ['activeTab'],
+  emits: ['changeTab'],
   data() {
     return {
-      user: null,
+      menuItems: [
+        { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { key: 'schedule', label: 'Schedule', icon: '📅' },
+        { key: 'employees', label: 'Employees', icon: '👥', to: '/dashboard/employees' },
+        { key: 'timeoff', label: 'Time Off Requests', icon: '📝' },
+        { key: 'reports', label: 'Reports', icon: '📈' },
+      ],
     };
-  },
-  async created() {
-    try {
-      this.user = await LoginService.fetchCurrentUser();
-    } catch (err) {
-      console.log('Failed to fetch user:', err);
-    }
   },
 };
 </script>

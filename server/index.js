@@ -39,3 +39,4 @@ app.listen(PORT, async () => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api", staffRoutes);

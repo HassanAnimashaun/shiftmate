@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen md:flex flex-col">
-    <!-- HEADER -->
     <DashHeader />
 
     <!-- BODY -->
@@ -9,6 +8,11 @@
       <aside class="">
         <DashSidebar />
       </aside>
+
+      <!-- MAIN -->
+      <div class="w-full">
+        <router-view />
+      </div>
     </div>
   </div>
 </template>
@@ -18,10 +22,32 @@ import DashHeader from '@/components/Header.vue';
 import DashSidebar from '@/components/Sidebar.vue';
 
 export default {
-  name: 'AdminDashboard-page',
+  name: 'AdminDashboard',
   components: {
     DashHeader,
     DashSidebar,
+  },
+  data() {
+    return {
+      activeTab: 'dashboard',
+    };
+  },
+  computed: {
+    currentComponent() {
+      switch (this.activeTab) {
+        case 'dashboard':
+          return 'DashboardOverview';
+        case 'employees':
+          return 'EmployeesView';
+        default:
+          return 'DashboardOverview';
+      }
+    },
+  },
+  methods: {
+    setTab(tab) {
+      this.activeTab = tab;
+    },
   },
 };
 </script>

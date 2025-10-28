@@ -1,4 +1,6 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
+const { ObjectId } = require("mongodb");
 const router = express.Router();
 const { connectDB } = require("../db");
 const verifyToken = require("../middleware/authMiddleware");
@@ -32,6 +34,31 @@ router.get("/me", async (req, res) => {
     res.json({ user });
   } catch {
     res.status(401).json({ msg: "Invalid token" });
+  }
+});
+
+// DELETE /api/delete/staff - delete selected user
+router.delete("/delete/staff/:id", async (req, res) => {
+  try {
+    const db = await connectDB();
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "Invalid staff ID" });
+    }
+
+    const result = await db
+      .collection("staff")
+      .deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ msg: "Not found" });
+    }
+
+    res.status(200).json({ msg: "Staff member deleted successfully" });
+  } catch (err) {
+    console.log("Failed to delete staff: ", err);
+    res.status(500).json({ msg: "Server error while deleting staff" });
   }
 });
 module.exports = router;
