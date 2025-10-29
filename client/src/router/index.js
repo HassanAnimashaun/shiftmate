@@ -35,6 +35,10 @@ export const router = createRouter({
       component: Dashboard,
       children: [
         {
+          path: '',
+          redirect: { name: 'employees' },
+        },
+        {
           path: 'employees',
           name: 'employees',
           component: EmployeesView,

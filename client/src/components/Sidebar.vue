@@ -4,13 +4,15 @@
     <router-link
       v-for="item in menuItems"
       :key="item.key"
-      :to="item.to"
+      :to="item.to || $route.fullPath"
       class="flex items-center gap-2 px-3 py-2 rounded-lg"
       :class="[
-        $route.name === item.key
+        isActive(item)
           ? 'bg-purple-200 text-purple-800 font-medium'
           : 'text-gray-700 hover:bg-purple-100',
       ]"
+      :aria-disabled="!item.to"
+      @click="handleClick(item, $event)"
     >
       <span>{{ item.icon }}</span>
       <span>{{ item.label }}</span>
@@ -25,13 +27,39 @@ export default {
   data() {
     return {
       menuItems: [
-        { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+        {
+          key: 'dashboard',
+          label: 'Dashboard',
+          icon: '📊',
+          to: '/dashboard',
+          routeName: 'AdminDashboard-page',
+        },
         { key: 'schedule', label: 'Schedule', icon: '📅' },
-        { key: 'employees', label: 'Employees', icon: '👥', to: '/dashboard/employees' },
+        {
+          key: 'employees',
+          label: 'Employees',
+          icon: '👥',
+          to: '/dashboard/employees',
+          routeName: 'employees',
+        },
         { key: 'timeoff', label: 'Time Off Requests', icon: '📝' },
         { key: 'reports', label: 'Reports', icon: '📈' },
       ],
     };
+  },
+  methods: {
+    handleClick(item, event) {
+      if (!item.to) {
+        event.preventDefault();
+        this.$emit('changeTab', item.key);
+      }
+    },
+    isActive(item) {
+      if (item.routeName) {
+        return this.$route.name === item.routeName;
+      }
+      return this.activeTab === item.key;
+    },
   },
 };
 </script>
