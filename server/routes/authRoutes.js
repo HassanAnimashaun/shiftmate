@@ -30,7 +30,7 @@ function buildUserResponse(user) {
     id: user._id.toString(),
     username: user.username,
     role: user.role,
-    name: user.name ,
+    name: user.name || fallbackNameParts || user.username,
   };
 }
 

@@ -15,7 +15,8 @@ async function login(credentials) {
     return userCache;
   } catch (err) {
     userCache = null;
-    console.error(err.msg);
+    fetchPromise = null;
+    throw err;
   }
 }
 
@@ -45,7 +46,7 @@ async function fetchCurrentUser() {
 async function logout() {
   loggedOut = true;
   try {
-    await api.post('/auth/logout', { withCredentials: true });
+    await api.post('/auth/logout');
   } finally {
     userCache = null;
     fetchPromise = null;

@@ -5,7 +5,17 @@
       <AddEmployeeButton @add="openAddForm" />
     </div>
 
-    <EmployeeList :employees="employees" @edit="editEmployee" @delete="deleteEmployee" />
+    <p v-if="error" class="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+      {{ error }}
+    </p>
+    <p v-else-if="loading" class="mb-4 text-sm text-gray-500">Loading employees...</p>
+
+    <EmployeeList
+      v-if="!loading"
+      :employees="employees"
+      @edit="editEmployee"
+      @delete="deleteEmployee"
+    />
 
     <!-- Add/Edit Modal -->
     <EmployeeForm
@@ -31,19 +41,26 @@ export default {
       employees: [],
       showForm: false,
       selectedEmployee: null,
+      loading: false,
+      error: '',
     };
   },
   async mounted() {
-    this.fetchEmployees();
+    await this.fetchEmployees();
   },
   methods: {
     async fetchEmployees() {
       try {
+        this.loading = true;
+        this.error = '';
         const res = await AdminService.getAllStaff();
-        this.employees = res.data;
+        this.employees = Array.isArray(res.data) ? res.data : [];
       } catch (err) {
         console.error('Failed to load employees:', err);
+        this.error = err.response?.data?.msg || 'Failed to load employees';
+        this.employees = [];
       }
+      this.loading = false;
     },
     openAddForm() {
       this.selectedEmployee = null;
@@ -59,9 +76,10 @@ export default {
     async deleteEmployee(id) {
       try {
         await AdminService.deleteEmployee(id);
-        this.fetchEmployees();
+        await this.fetchEmployees();
       } catch (err) {
         console.log('Failed to delete employee', err);
+        this.error = err.response?.data?.msg || 'Failed to delete employee';
       }
     },
   },

@@ -72,7 +72,8 @@ export default {
     },
     async logout() {
       try {
-        await LoginService.logout({});
+        await LoginService.logout();
+        this.user = null;
         this.$router.push('/');
       } catch (err) {
         console.error(err);

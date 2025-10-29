@@ -3,13 +3,18 @@
     <!-- EMPLOYEE CARDS -->
     <div
       v-for="emp in employees"
-      :key="emp._id"
+      :key="emp.id || emp._id"
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-orange-100 to-orange-200 rounded-xl px-6 py-4 shadow-sm hover:shadow-md transition"
     >
       <!-- EMPLOYEE INFO -->
       <div class="flex flex-col">
         <h2 class="text-black font-semibold text-lg">{{ emp.name }}</h2>
-        <span class="text-gray-700 text-sm">{{ emp.role }} | Full-Time</span>
+        <span class="text-gray-700 text-sm">
+          {{ emp.role || 'Employee' }}
+          <template v-if="emp.employmentType">
+            | {{ formatEmploymentType(emp.employmentType) }}
+          </template>
+        </span>
       </div>
 
       <!-- ACTION BUTTONS -->
@@ -21,7 +26,7 @@
           Edit
         </button>
         <button
-          @click="$emit('delete', emp._id)"
+          @click="$emit('delete', emp.id || emp._id)"
           class="bg-gradient-to-r from-cyan-100 to-cyan-200 text-gray-800 font-medium px-5 py-1.5 rounded-full text-sm shadow-sm hover:shadow transition"
         >
           Delete
@@ -46,5 +51,16 @@ export default {
     },
   },
   emits: ['edit', 'delete'],
+  methods: {
+    formatEmploymentType(type) {
+      if (!type) return '';
+      const lookup = {
+        fullTime: 'Full-time',
+        partTime: 'Part-time',
+        contractor: 'Contractor',
+      };
+      return lookup[type] || type;
+    },
+  },
 };
 </script>
