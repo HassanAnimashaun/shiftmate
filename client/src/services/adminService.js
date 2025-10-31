@@ -6,6 +6,11 @@ const AdminService = {
     return api.get('/staff');
   },
 
+  // Number of emplpoyees
+  totalEmployees() {
+    return api.get('/staff/count');
+  },
+
   // Add new employee
   addStaff(data) {
     return api.post('/staff', data);

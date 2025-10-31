@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+  <div class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xs px-4">
     <div class="relative w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl">
       <button
         type="button"
@@ -39,7 +39,9 @@
         </div>
 
         <div>
-          <label for="phone" class="mb-2 block text-sm font-medium text-gray-700">Phone Number</label>
+          <label for="phone" class="mb-2 block text-sm font-medium text-gray-700"
+            >Phone Number</label
+          >
           <input
             id="phone"
             v-model.trim="form.phone"
@@ -50,7 +52,9 @@
         </div>
 
         <div>
-          <label for="position" class="mb-2 block text-sm font-medium text-gray-700">Position</label>
+          <label for="position" class="mb-2 block text-sm font-medium text-gray-700"
+            >Position</label
+          >
           <input
             id="position"
             v-model.trim="form.position"
@@ -61,7 +65,9 @@
         </div>
 
         <div>
-          <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700">Employment Type</label>
+          <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700"
+            >Employment Type</label
+          >
           <select
             id="employmentType"
             v-model="form.employmentType"
@@ -86,7 +92,9 @@
         </div>
 
         <div v-if="form.employmentType === 'partTime' || form.employmentType === 'contractor'">
-          <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700">Hourly Rate</label>
+          <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700"
+            >Hourly Rate</label
+          >
           <input
             id="hourlyRate"
             v-model.number="form.hourlyRate"

@@ -89,7 +89,7 @@ export default {
           password: this.password,
         });
         this.error = '';
-        this.$router.push('/dashboard');
+        this.$router.push('/admin');
       } catch (err) {
         this.error = err.response?.data?.msg || 'Server error';
       }

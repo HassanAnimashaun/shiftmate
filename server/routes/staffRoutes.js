@@ -48,7 +48,6 @@ router.get("/", verifyToken, async (req, res) => {
       .collection("staff")
       .find({}, { projection: { password: 0 } })
       .toArray();
-
     res.status(200).json(staffList.map(sanitizeStaffMember));
   } catch (err) {
     console.error("Failed to fetch staff", err);
@@ -56,14 +55,32 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
+// GET /api/staff/count — count number of employees
+router.get("/count", verifyToken, async (req, res) => {
+  try {
+    const db = await connectDB();
+    const staffCollection = await db.collection("staff");
+
+    const employeeCount = await staffCollection.countDocuments({
+      role: "employee",
+    });
+
+    res.status(200).json({ employeeCount });
+  } catch (err) {
+    console.error("Failed to fetch staff", err);
+    res.status(500).json({ msg: "Failed to fetch staff" });
+  }
+});
 // GET /api/staff/me — fetch the currently authenticated user
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const db = await connectDB();
-    const user = await db.collection("staff").findOne(
-      { _id: new ObjectId(req.user.id) },
-      { projection: { password: 0 } }
-    );
+    const user = await db
+      .collection("staff")
+      .findOne(
+        { _id: new ObjectId(req.user.id) },
+        { projection: { password: 0 } }
+      );
 
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
@@ -78,15 +95,8 @@ router.get("/me", verifyToken, async (req, res) => {
 
 // POST /api/staff — add a new staff member
 router.post("/", verifyToken, async (req, res) => {
-  const {
-    name,
-    email,
-    phone,
-    position,
-    employmentType,
-    hourlyRate,
-    role,
-  } = req.body ?? {};
+  const { name, email, phone, position, employmentType, hourlyRate, role } =
+    req.body ?? {};
 
   if (!name) {
     return res.status(400).json({ msg: "Name is required" });
