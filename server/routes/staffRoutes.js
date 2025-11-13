@@ -1,5 +1,5 @@
 const express = require("express");
-const crypto = require("crypto")
+const crypto = require("crypto");
 const { ObjectId } = require("mongodb");
 const router = express.Router();
 const { connectDB } = require("../db");
@@ -11,8 +11,8 @@ function sanitizeStaffMember(staffMember) {
 
   const {
     _id,
-    firstName = "",
-    lastName = "",
+    firstName: storedFirstName = "",
+    lastName: storedLastName = "",
     username = "",
     name = "",
     email = "",
@@ -25,10 +25,18 @@ function sanitizeStaffMember(staffMember) {
     updatedAt,
   } = staffMember;
 
-  const derivedName = (name || `${firstName} ${lastName}`.trim()).trim();
+  const derivedName = (
+    name || `${storedFirstName} ${storedLastName}`.trim()
+  ).trim();
+  const [derivedFirstName = "", ...derivedLastParts] = derivedName
+    ? derivedName.split(/\s+/)
+    : [];
+  const derivedLastName = derivedLastParts.join(" ");
 
   return {
     id: _id?.toString(),
+    firstName: (storedFirstName || derivedFirstName || "").trim(),
+    lastName: (storedLastName || derivedLastName || "").trim(),
     name: derivedName || username,
     email,
     phone,
@@ -149,6 +157,8 @@ router.put("/:id", verifyToken, async (req, res) => {
 
   const allowedFields = [
     "name",
+    "firstName",
+    "lastName",
     "email",
     "phone",
     "position",
@@ -160,13 +170,25 @@ router.put("/:id", verifyToken, async (req, res) => {
   const updates = {};
   for (const field of allowedFields) {
     if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-      updates[field] =
-        field === "hourlyRate" && req.body[field] !== null
-          ? Number(req.body[field])
-          : req.body[field];
+      let value = req.body[field];
+      if (field === "hourlyRate" && value !== null) {
+        value = Number(value);
+      } else if (typeof value === "string") {
+        value = value.trim();
+      }
+
+      updates[field] = value;
     }
   }
   console.log("Updating staff ID:", id, "with data:", updates);
+
+  if (
+    Object.prototype.hasOwnProperty.call(updates, "hourlyRate") &&
+    updates.hourlyRate !== null &&
+    Number.isNaN(updates.hourlyRate)
+  ) {
+    return res.status(400).json({ msg: "Hourly rate must be a number" });
+  }
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ msg: "No valid fields provided for update" });
@@ -222,46 +244,99 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
+async function generateUniqueUsername(base, collection) {
+  let candidate = base;
+  let suffix = 1;
+
+  while (await collection.findOne({ username: candidate })) {
+    candidate = `${base}${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
+}
+
 // POST /api/onboard - creates new user profile and temporary OTP
 router.post("/onboard", verifyToken, async (req, res) => {
   try {
-    const { firstName, lastName, email, role = "employee" } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      role = "employee",
+      phone = "",
+      position = "",
+      employmentType = "",
+      hourlyRate = null,
+    } = req.body ?? {};
 
     if (!firstName || !lastName || !email) {
-      return res.status(400).json({ error: "firstName, lastName and email are required" });
+      return res
+        .status(400)
+        .json({ error: "firstName, lastName and email are required" });
     }
+
+    if (
+      typeof firstName !== "string" ||
+      typeof lastName !== "string" ||
+      typeof email !== "string"
+    ) {
+      return res
+        .status(400)
+        .json({ error: "firstName, lastName and email must be strings" });
+    }
+
+    const normalizedFirst = firstName.trim();
+    const normalizedLast = lastName.trim();
+    const normalizeString = (value) =>
+      typeof value === "string" ? value.trim() : "";
+    const normalizedRole = normalizeString(role) || "employee";
 
     const db = await connectDB();
     const staffCollection = db.collection("staff");
 
-    // Generate username
-    const username = `${firstName}${lastName}`.toLowerCase().replace(/\s+/g, "");
+    const baseUsername = `${normalizedFirst}${normalizedLast}`
+      .toLowerCase()
+      .replace(/\s+/g, "");
+    const username = await generateUniqueUsername(baseUsername, staffCollection);
 
-    // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 1000000).toString();
-
-    // Hash OTP
     const hashedOtp = await bcrypt.hash(otp, 10);
 
-    // Insert to DB
+    const normalizedHourlyRate =
+      hourlyRate === undefined || hourlyRate === null || hourlyRate === ""
+        ? null
+        : Number(hourlyRate);
+
+    if (normalizedHourlyRate !== null && Number.isNaN(normalizedHourlyRate)) {
+      return res.status(400).json({ error: "Hourly rate must be a number" });
+    }
+
+    const now = new Date();
     const newStaff = {
-      firstName,
-      lastName,
+      firstName: normalizedFirst,
+      lastName: normalizedLast,
+      name: `${normalizedFirst} ${normalizedLast}`.trim(),
       email,
+      phone: normalizeString(phone),
+      position: normalizeString(position),
+      employmentType: normalizeString(employmentType),
+      hourlyRate: normalizedHourlyRate,
       username,
       password: hashedOtp,
-      role,
+      role: normalizedRole,
       mustChangePassword: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
 
-    await staffCollection.insertOne(newStaff);
+    const { insertedId } = await staffCollection.insertOne(newStaff);
 
     res.status(201).json({
       message: "Employee onboarded successfully",
       username,
       otp,
+      staff: sanitizeStaffMember({ ...newStaff, _id: insertedId }),
     });
   } catch (err) {
     console.log(err);

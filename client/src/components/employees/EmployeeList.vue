@@ -15,6 +15,9 @@
             | {{ formatEmploymentType(emp.employmentType) }}
           </template>
         </span>
+        <span v-if="emp.username" class="text-xs font-medium text-gray-600 mt-1">
+          Username: <span class="font-mono text-sm">{{ emp.username }}</span>
+        </span>
       </div>
 
       <!-- ACTION BUTTONS -->

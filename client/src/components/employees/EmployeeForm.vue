@@ -11,20 +11,57 @@
       </button>
 
       <h2 class="mb-6 text-2xl font-semibold text-gray-800">
-        {{ employee ? 'Edit Employee' : 'Add Employee' }}
+        {{ employee ? 'Edit Employee' : 'Onboard Employee' }}
       </h2>
 
+      <div
+        v-if="!employee && generatedCredentials"
+        class="mb-6 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900"
+      >
+        <p class="font-semibold text-indigo-950">Employee account created</p>
+        <p class="mt-2">
+          Share these temporary credentials with the employee. The OTP expires after their first login.
+        </p>
+        <div class="mt-3 grid gap-2 md:grid-cols-2">
+          <div class="rounded-lg bg-white px-3 py-2 shadow-sm">
+            <p class="text-xs uppercase tracking-wide text-gray-500">Username</p>
+            <p class="font-mono text-base font-semibold text-gray-900">
+              {{ generatedCredentials.username }}
+            </p>
+          </div>
+          <div class="rounded-lg bg-white px-3 py-2 shadow-sm">
+            <p class="text-xs uppercase tracking-wide text-gray-500">One-time password</p>
+            <p class="font-mono text-base font-semibold text-gray-900">
+              {{ generatedCredentials.otp }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <form @submit.prevent="handleSubmit" class="space-y-5">
-        <div>
-          <label for="name" class="mb-2 block text-sm font-medium text-gray-700">Full Name</label>
-          <input
-            id="name"
-            v-model.trim="form.name"
-            type="text"
-            required
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="Enter employee name"
-          />
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label for="firstName" class="mb-2 block text-sm font-medium text-gray-700">First Name</label>
+            <input
+              id="firstName"
+              v-model.trim="form.firstName"
+              type="text"
+              required
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter first name"
+            />
+          </div>
+          <div>
+            <label for="lastName" class="mb-2 block text-sm font-medium text-gray-700">Last Name</label>
+            <input
+              id="lastName"
+              v-model.trim="form.lastName"
+              type="text"
+              required
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter last name"
+            />
+          </div>
         </div>
 
         <div>
@@ -124,7 +161,7 @@
             class="rounded-lg bg-gradient-to-r from-indigo-400 to-purple-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
             :disabled="saving"
           >
-            {{ saving ? 'Saving...' : employee ? 'Save Changes' : 'Add Employee' }}
+            {{ saving ? 'Saving...' : employee ? 'Save Changes' : 'Onboard Employee' }}
           </button>
         </div>
       </form>
@@ -136,7 +173,8 @@
 import AdminService from '@/services/adminService';
 
 const DEFAULT_FORM = {
-  name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
   position: '',
@@ -159,6 +197,7 @@ export default {
       form: { ...DEFAULT_FORM },
       saving: false,
       error: '',
+      generatedCredentials: null,
     };
   },
   watch: {
@@ -166,11 +205,13 @@ export default {
       handler(newEmployee) {
         if (!newEmployee) {
           this.form = { ...DEFAULT_FORM };
+          this.generatedCredentials = null;
           return;
         }
 
         const source = {
-          name: newEmployee.name ?? '',
+          firstName: newEmployee.firstName ?? '',
+          lastName: newEmployee.lastName ?? '',
           email: newEmployee.email ?? '',
           phone: newEmployee.phone ?? '',
           position: newEmployee.position ?? '',
@@ -182,7 +223,14 @@ export default {
               : Number(newEmployee.hourlyRate),
         };
 
+        if ((!source.firstName || !source.lastName) && newEmployee.name) {
+          const [first = '', ...rest] = newEmployee.name.split(/\s+/);
+          source.firstName = source.firstName || first;
+          source.lastName = source.lastName || rest.join(' ');
+        }
+
         this.form = { ...DEFAULT_FORM, ...source };
+        this.generatedCredentials = null;
       },
       immediate: true,
     },
@@ -191,17 +239,34 @@ export default {
     handleClose() {
       this.$emit('close');
       this.error = '';
+      this.generatedCredentials = null;
+      this.form = { ...DEFAULT_FORM };
     },
     async handleSubmit() {
       this.saving = true;
       this.error = '';
 
+      const hourlyRateValue =
+        this.form.hourlyRate === null || this.form.hourlyRate === ''
+          ? null
+          : Number(this.form.hourlyRate);
+
+      if (hourlyRateValue !== null && Number.isNaN(hourlyRateValue)) {
+        this.error = 'Hourly rate must be a number';
+        this.saving = false;
+        return;
+      }
+
       const payload = {
-        ...this.form,
-        hourlyRate:
-          this.form.hourlyRate === null || this.form.hourlyRate === ''
-            ? null
-            : Number(this.form.hourlyRate),
+        firstName: this.form.firstName,
+        lastName: this.form.lastName,
+        name: `${this.form.firstName} ${this.form.lastName}`.trim(),
+        email: this.form.email,
+        phone: this.form.phone,
+        position: this.form.position,
+        employmentType: this.form.employmentType,
+        role: this.form.role,
+        hourlyRate: hourlyRateValue,
       };
 
       try {
@@ -210,14 +275,24 @@ export default {
         if (id) {
           await AdminService.updateStaff(id, payload);
         } else {
-          await AdminService.addStaff(payload);
+          const response = await AdminService.onboardStaff(payload);
+          this.generatedCredentials = {
+            username: response.data?.username,
+            otp: response.data?.otp,
+          };
         }
 
         this.$emit('saved');
-        this.handleClose();
-        this.form = { ...DEFAULT_FORM };
+        if (id) {
+          this.handleClose();
+        } else {
+          this.form = { ...DEFAULT_FORM };
+        }
       } catch (err) {
-        this.error = err.response?.data?.msg || 'Unable to save employee';
+        this.error =
+          err.response?.data?.msg ||
+          err.response?.data?.error ||
+          'Unable to save employee';
       } finally {
         this.saving = false;
       }

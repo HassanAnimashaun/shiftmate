@@ -16,6 +16,11 @@ const AdminService = {
     return api.post('/staff', data);
   },
 
+  // Onboard a new employee with OTP credentials
+  onboardStaff(data) {
+    return api.post('/staff/onboard', data);
+  },
+
   // Delete staff by ID
   deleteEmployee(id) {
     return api.delete(`/staff/${id}`);

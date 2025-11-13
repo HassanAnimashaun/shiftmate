@@ -57,7 +57,10 @@ export default {
         this.employees = Array.isArray(res.data) ? res.data : [];
       } catch (err) {
         console.error('Failed to load employees:', err);
-        this.error = err.response?.data?.msg || 'Failed to load employees';
+        this.error =
+          err.response?.data?.msg ||
+          err.response?.data?.error ||
+          'Failed to load employees';
         this.employees = [];
       }
       this.loading = false;
@@ -79,7 +82,10 @@ export default {
         await this.fetchEmployees();
       } catch (err) {
         console.log('Failed to delete employee', err);
-        this.error = err.response?.data?.msg || 'Failed to delete employee';
+        this.error =
+          err.response?.data?.msg ||
+          err.response?.data?.error ||
+          'Failed to delete employee';
       }
     },
   },
