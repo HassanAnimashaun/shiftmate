@@ -1,8 +1,10 @@
 const express = require("express");
+const crypto = require("crypto")
 const { ObjectId } = require("mongodb");
 const router = express.Router();
 const { connectDB } = require("../db");
 const verifyToken = require("../middleware/authMiddleware");
+const bcrypt = require("bcrypt");
 
 function sanitizeStaffMember(staffMember) {
   if (!staffMember) return null;
@@ -164,6 +166,7 @@ router.put("/:id", verifyToken, async (req, res) => {
           : req.body[field];
     }
   }
+  console.log("Updating staff ID:", id, "with data:", updates);
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ msg: "No valid fields provided for update" });
@@ -188,6 +191,7 @@ router.put("/:id", verifyToken, async (req, res) => {
 
     res.status(200).json(sanitizeStaffMember(result.value));
   } catch (err) {
+    console.error(err);
     console.error("Failed to update staff", err);
     res.status(500).json({ msg: "Failed to update staff" });
   }
@@ -215,6 +219,81 @@ router.delete("/:id", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Failed to delete staff", err);
     res.status(500).json({ msg: "Server error while deleting staff" });
+  }
+});
+
+// POST /api/onboard - creates new user profile and temporary OTP
+router.post("/onboard", verifyToken, async (req, res) => {
+  try {
+    const { firstName, lastName, email, role = "employee" } = req.body;
+
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ error: "firstName, lastName and email are required" });
+    }
+
+    const db = await connectDB();
+    const staffCollection = db.collection("staff");
+
+    // Generate username
+    const username = `${firstName}${lastName}`.toLowerCase().replace(/\s+/g, "");
+
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 1000000).toString();
+
+    // Hash OTP
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    // Insert to DB
+    const newStaff = {
+      firstName,
+      lastName,
+      email,
+      username,
+      password: hashedOtp,
+      role,
+      mustChangePassword: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await staffCollection.insertOne(newStaff);
+
+    res.status(201).json({
+      message: "Employee onboarded successfully",
+      username,
+      otp,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Failed to onboard employee" });
+  }
+});
+
+// POST /api/staff/new-password - updates OTP with new password
+router.post("/new-password", verifyToken, async (req, res) => {
+  const { username, newPassword } = req.body ?? {};
+
+  if (!username || !newPassword) {
+    return res.status(400).json({ msg: "Username and new password are required" });
+  }
+
+  try {
+    const db = await connectDB();
+    const staffCollection = db.collection("staff");
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const result = await staffCollection.updateOne(
+      { username },
+      { $set: { password: hashed, mustChangePassword: false, updatedAt: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Failed to change password", err);
+    res.status(500).json({ msg: "Failed to change password" });
   }
 });
 

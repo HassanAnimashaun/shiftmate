@@ -30,6 +30,7 @@ function buildUserResponse(user) {
     id: user._id.toString(),
     username: user.username,
     role: user.role,
+    mustChangePassword: user.mustChangePassword,
     name: user.name || fallbackNameParts || user.username,
   };
 }

@@ -25,7 +25,7 @@
         </div>
 
         <!-- PASSWORD FEILD-->
-        <div class="relative">
+        <div v-if="!mustChangePassword" class="relative">
           <label for="password" class="block text-sm pb-2 font-medium text-gray-700"
             >Password</label
           >
@@ -47,16 +47,52 @@
           </button>
         </div>
 
-        <div v-if="error" class="text-red-500 text-sm mb-2">
-          {{ error }}
+        <!-- CHANGE PASSWORD FEILD-->
+        <div v-else class="relative">
+          <label for="password" class="block text-sm pb-2 font-medium text-gray-700"
+            >New Password</label
+          >
+          <input
+            :type="showPassword ? 'text' : 'password'"
+            v-model="newPassword"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            @click.prevent="togglePassword"
+            class="absolute inset-y-0 right-0 pr-2 pt-7 flex items-center"
+          >
+            <span v-if="showPassword" class="material-symbols-outlined text-gray-500">
+              visibility
+            </span>
+            <span v-else class="material-symbols-outlined text-gray-500"> visibility_off </span>
+          </button>
         </div>
 
+        <!-- SIGNIN  -->
         <button
           type="submit"
+          v-if="!mustChangePassword"
           class="bg-gradient-to-r from-indigo-400 to-purple-500 text-white font-semibold py-2 rounded-lg hover:opacity-90 transition w-full"
         >
           Sign In
         </button>
+
+        <!-- UPDATE PASSWORD -->
+        <button
+          type="button"
+          v-else
+          class="bg-gradient-to-r from-indigo-400 to-purple-500 text-white font-semibold py-2 rounded-lg hover:opacity-90 transition w-full"
+          @click="changePassword"
+        >
+          Update Password
+        </button>
+
+        <div v-if="error" class="text-red-500 text-sm mb-2">
+          {{ error }}
+        </div>
+
         <!-- FOOTER -->
         <div class="mt-6 flex justify-center space-x-4 text-sm">
           <a href="#" class="text-purple-600 hover:underline">Forgot Password?</a>
@@ -74,7 +110,10 @@ export default {
     return {
       username: '',
       password: '',
+      newPassword: '',
+      user: null,
       showPassword: false,
+      mustChangePassword: false,
       error: '',
     };
   },
@@ -84,14 +123,34 @@ export default {
     },
     async handleLogin() {
       try {
-        await authService.login({
+        const result = await authService.login({
           username: this.username,
           password: this.password,
         });
+
+        this.user = result.user;
+
+        if (result.mustChangePassword) {
+          this.mustChangePassword = true;
+          return;
+        }
         this.error = '';
         this.$router.push('/admin');
       } catch (err) {
         this.error = err.response?.data?.msg || 'Server error';
+      }
+    },
+    async changePassword() {
+      try {
+        await authService.changePassword({
+          username: this.user.username,
+          newPassword: this.newPassword,
+        });
+
+        this.error = '';
+        this.$router.push('/admin');
+      } catch (err) {
+        this.error = err.response?.data?.msg || 'Could not update password';
       }
     },
   },

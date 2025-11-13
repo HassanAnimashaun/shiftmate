@@ -12,12 +12,20 @@ async function login(credentials) {
 
     userCache = res.data?.user ?? null;
     loggedOut = false;
-    return userCache;
+
+    if (userCache?.mustChangePassword) {
+      return { mustChangePassword: true, user: userCache };
+    }
+
+    return { mustChangePassword: false, user: userCache };
   } catch (err) {
     userCache = null;
     fetchPromise = null;
     throw err;
   }
+}
+async function changePassword(data) {
+  return api.post('/staff/new-password', data, { withCredentials: true });
 }
 
 async function fetchCurrentUser() {
@@ -58,4 +66,5 @@ export default {
   login,
   fetchCurrentUser,
   logout,
+  changePassword,
 };

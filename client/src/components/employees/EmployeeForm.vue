@@ -82,16 +82,19 @@
 
         <div>
           <label for="role" class="mb-2 block text-sm font-medium text-gray-700">Role</label>
-          <input
+          <select
             id="role"
-            v-model.trim="form.role"
-            type="text"
+            v-model="form.role"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="e.g. Nurse, Manager"
-          />
+          >
+            <option disabled value="">Select employment Role</option>
+            <option value="employee">Employee</option>
+            <option value="doctor">Doctor</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
 
-        <div v-if="form.employmentType === 'partTime' || form.employmentType === 'contractor'">
+        <div>
           <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700"
             >Hourly Rate</label
           >
@@ -172,11 +175,11 @@ export default {
           phone: newEmployee.phone ?? '',
           position: newEmployee.position ?? '',
           employmentType: newEmployee.employmentType || 'fullTime',
+          role: newEmployee.role || 'employee',
           hourlyRate:
             newEmployee.hourlyRate === null || newEmployee.hourlyRate === undefined
               ? null
               : Number(newEmployee.hourlyRate),
-          role: newEmployee.role || 'employee',
         };
 
         this.form = { ...DEFAULT_FORM, ...source };
