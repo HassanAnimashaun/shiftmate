@@ -5,11 +5,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { connectDB } = require("./db");
 
-// Import Routes
 const authRoutes = require("./routes/authRoutes");
 const staffRoutes = require("./routes/staffRoutes");
 
-// Initialize Express App
 const app = express();
 
 const rawClientOrigins =
@@ -17,22 +15,28 @@ const rawClientOrigins =
 
 const allowedOrigins = rawClientOrigins
   .split(",")
-  .map(origin => origin.trim())
+  .map((origin) => origin.trim())
   .filter(Boolean);
 
+// 1️⃣ CORS FIRST
 app.use(
   cors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : undefined,
     credentials: true,
   })
 );
+
+// 2️⃣ Body parsers
 app.use(express.json());
 app.use(cookieParser());
 
-// Environment Variables
+// 3️⃣ ROUTES MUST BE HERE (BEFORE LISTEN)
+app.use("/api/auth", authRoutes);
+app.use("/api/staff", staffRoutes);
+
+// 4️⃣ START SERVER + CONNECT DB
 const PORT = process.env.PORT || 5000;
 
-// Start Server and Connect to Database
 app.listen(PORT, async () => {
   try {
     await connectDB();
@@ -42,7 +46,3 @@ app.listen(PORT, async () => {
     process.exit(1);
   }
 });
-
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/staff", staffRoutes);
