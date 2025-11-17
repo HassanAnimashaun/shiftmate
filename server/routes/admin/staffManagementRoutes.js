@@ -1,53 +1,24 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
+
+const { connectDB } = require("../../db");
+const verifyToken = require("../../middleware/authMiddleware");
+const requireRole = require("../../middleware/roleMiddleware");
+const { sanitizeStaffMember, parseHourlyRate } = require("../../utils/staff");
+
 const router = express.Router();
-const { connectDB } = require("../db");
-const verifyToken = require("../middleware/authMiddleware");
 
-function sanitizeStaffMember(staffMember) {
-  if (!staffMember) return null;
+router.use(verifyToken, requireRole("admin"));
 
-  const {
-    _id,
-    firstName = "",
-    lastName = "",
-    username = "",
-    name = "",
-    email = "",
-    phone = "",
-    position = "",
-    employmentType = "",
-    hourlyRate = null,
-    role = "employee",
-    createdAt,
-    updatedAt,
-  } = staffMember;
-
-  const derivedName = (name || `${firstName} ${lastName}`.trim()).trim();
-
-  return {
-    id: _id?.toString(),
-    name: derivedName || username,
-    email,
-    phone,
-    position,
-    employmentType,
-    hourlyRate: hourlyRate === null ? null : Number(hourlyRate),
-    role,
-    username,
-    createdAt,
-    updatedAt,
-  };
-}
-
-// GET /api/staff — fetch all staff members
-router.get("/", verifyToken, async (req, res) => {
+// GET /api/admin/staff — fetch all staff members
+router.get("/", async (req, res) => {
   try {
     const db = await connectDB();
     const staffList = await db
       .collection("staff")
       .find({}, { projection: { password: 0 } })
       .toArray();
+
     res.status(200).json(staffList.map(sanitizeStaffMember));
   } catch (err) {
     console.error("Failed to fetch staff", err);
@@ -55,15 +26,13 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
-// GET /api/staff/count — count number of employees
-router.get("/count", verifyToken, async (req, res) => {
+// GET /api/admin/staff/count — count number of employees
+router.get("/count", async (req, res) => {
   try {
     const db = await connectDB();
-    const staffCollection = await db.collection("staff");
-
-    const employeeCount = await staffCollection.countDocuments({
-      role: "employee",
-    });
+    const employeeCount = await db
+      .collection("staff")
+      .countDocuments({ role: "employee" });
 
     res.status(200).json({ employeeCount });
   } catch (err) {
@@ -71,30 +40,9 @@ router.get("/count", verifyToken, async (req, res) => {
     res.status(500).json({ msg: "Failed to fetch staff" });
   }
 });
-// GET /api/staff/me — fetch the currently authenticated user
-router.get("/me", verifyToken, async (req, res) => {
-  try {
-    const db = await connectDB();
-    const user = await db
-      .collection("staff")
-      .findOne(
-        { _id: new ObjectId(req.user.id) },
-        { projection: { password: 0 } }
-      );
 
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
-    }
-
-    res.json({ user: sanitizeStaffMember(user) });
-  } catch (err) {
-    console.error("Failed to fetch current user", err);
-    res.status(401).json({ msg: "Invalid token" });
-  }
-});
-
-// POST /api/staff — add a new staff member
-router.post("/", verifyToken, async (req, res) => {
+// POST /api/admin/staff — add a new staff member
+router.post("/", async (req, res) => {
   const { name, email, phone, position, employmentType, hourlyRate, role } =
     req.body ?? {};
 
@@ -102,13 +50,11 @@ router.post("/", verifyToken, async (req, res) => {
     return res.status(400).json({ msg: "Name is required" });
   }
 
-  const normalizedHourlyRate =
-    hourlyRate === undefined || hourlyRate === null || hourlyRate === ""
-      ? null
-      : Number(hourlyRate);
+  const { value: normalizedHourlyRate, error: hourlyRateError } =
+    parseHourlyRate(hourlyRate);
 
-  if (normalizedHourlyRate !== null && Number.isNaN(normalizedHourlyRate)) {
-    return res.status(400).json({ msg: "Hourly rate must be a number" });
+  if (hourlyRateError) {
+    return res.status(400).json({ msg: hourlyRateError });
   }
 
   try {
@@ -137,8 +83,8 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-// PUT /api/staff/:id — update a staff member
-router.put("/:id", verifyToken, async (req, res) => {
+// PUT /api/admin/staff/:id — update a staff member
+router.put("/:id", async (req, res) => {
   const { id } = req.params;
 
   if (!ObjectId.isValid(id)) {
@@ -158,10 +104,15 @@ router.put("/:id", verifyToken, async (req, res) => {
   const updates = {};
   for (const field of allowedFields) {
     if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-      updates[field] =
-        field === "hourlyRate" && req.body[field] !== null
-          ? Number(req.body[field])
-          : req.body[field];
+      if (field === "hourlyRate") {
+        const { value, error } = parseHourlyRate(req.body[field]);
+        if (error) {
+          return res.status(400).json({ msg: error });
+        }
+        updates[field] = value;
+      } else {
+        updates[field] = req.body[field];
+      }
     }
   }
 
@@ -193,8 +144,8 @@ router.put("/:id", verifyToken, async (req, res) => {
   }
 });
 
-// DELETE /api/staff/:id — delete a staff member
-router.delete("/:id", verifyToken, async (req, res) => {
+// DELETE /api/admin/staff/:id — delete a staff member
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   if (!ObjectId.isValid(id)) {
@@ -203,9 +154,9 @@ router.delete("/:id", verifyToken, async (req, res) => {
 
   try {
     const db = await connectDB();
-    const result = await db
-      .collection("staff")
-      .deleteOne({ _id: new ObjectId(id) });
+    const result = await db.collection("staff").deleteOne({
+      _id: new ObjectId(id),
+    });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ msg: "Staff member not found" });

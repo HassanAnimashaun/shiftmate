@@ -6,7 +6,8 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./db");
 
 const authRoutes = require("./routes/authRoutes");
-const staffRoutes = require("./routes/staffRoutes");
+const adminStaffRoutes = require("./routes/admin/staffManagementRoutes");
+const employeeProfileRoutes = require("./routes/employee/profileRoutes");
 
 const app = express();
 
@@ -32,7 +33,8 @@ app.use(cookieParser());
 
 // 3️⃣ ROUTES MUST BE HERE (BEFORE LISTEN)
 app.use("/api/auth", authRoutes);
-app.use("/api/staff", staffRoutes);
+app.use("/api/admin/staff", adminStaffRoutes);
+app.use("/api/employee", employeeProfileRoutes);
 
 // 4️⃣ START SERVER + CONNECT DB
 const PORT = process.env.PORT || 5000;
