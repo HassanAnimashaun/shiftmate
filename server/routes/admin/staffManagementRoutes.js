@@ -1,10 +1,16 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
+import bcrypt from "bcrypt";
 
 const { connectDB } = require("../../db");
 const verifyToken = require("../../middleware/authMiddleware");
 const requireRole = require("../../middleware/roleMiddleware");
+
+// Util
 const { sanitizeStaffMember, parseHourlyRate } = require("../../utils/staff");
+import { splitName } from "../../utils/splitName.js";
+import { generateUsername } from "../../utils/generateUsername.js";
+import { generateOtp } from "../../utils/generateOtp.js";
 
 const router = express.Router();
 
@@ -60,14 +66,25 @@ router.post("/", async (req, res) => {
   try {
     const db = await connectDB();
     const now = new Date();
+
+    const { firstName, lastName } = splitName(name);
+    const username = generateUsername(firstName, lastName);
+    const otp = generateOtp();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
     const result = await db.collection("staff").insertOne({
       name,
+      firstName,
+      lastName,
+      username,
       email: email ?? "",
       phone: phone ?? "",
       position: position ?? "",
       employmentType: employmentType ?? "",
       hourlyRate: normalizedHourlyRate,
       role: role ?? "employee",
+      password: hashedOtp,
+      mustChangePassword: true,
       createdAt: now,
       updatedAt: now,
     });
@@ -75,8 +92,12 @@ router.post("/", async (req, res) => {
     const inserted = await db
       .collection("staff")
       .findOne({ _id: result.insertedId }, { projection: { password: 0 } });
-
-    res.status(201).json(sanitizeStaffMember(inserted));
+    res.status(201).json({
+      ...sanitizeStaffMember(inserted),
+      username,
+      tempPassword: otp,
+      mustChangePassword: true,
+    });
   } catch (err) {
     console.error("Failed to add staff", err);
     res.status(500).json({ msg: "Failed to add staff" });

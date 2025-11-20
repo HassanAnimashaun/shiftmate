@@ -54,8 +54,13 @@ async function logout() {
   return true;
 }
 
+async function changePassword({ currentPassword, newPassword }) {
+  return api.post('/employee/new-password', { currentPassword, newPassword });
+}
+
 export default {
   login,
   fetchCurrentUser,
   logout,
+  changePassword,
 };

@@ -17,12 +17,13 @@
       @delete="deleteEmployee"
     />
 
-    <!-- Add/Edit Modal -->
+    <!-- ⭐ Add/Edit/Onboarding Modal -->
     <EmployeeForm
       v-if="showForm"
       :employee="selectedEmployee"
+      :onboarding="onboarding"
       @close="closeForm"
-      @saved="fetchEmployees"
+      @saved="handleEmployeeSaved"
     />
   </div>
 </template>
@@ -41,13 +42,16 @@ export default {
       employees: [],
       showForm: false,
       selectedEmployee: null,
+      onboarding: null, // ⭐ NEW
       loading: false,
       error: '',
     };
   },
+
   async mounted() {
     await this.fetchEmployees();
   },
+
   methods: {
     async fetchEmployees() {
       try {
@@ -62,17 +66,38 @@ export default {
       }
       this.loading = false;
     },
+
     openAddForm() {
       this.selectedEmployee = null;
+      this.onboarding = null;
       this.showForm = true;
     },
+
     editEmployee(employee) {
       this.selectedEmployee = employee;
+      this.onboarding = null;
       this.showForm = true;
     },
+
     closeForm() {
       this.showForm = false;
+      this.onboarding = null;
+      this.selectedEmployee = null;
     },
+
+    async handleEmployeeSaved(payload) {
+      if (payload?.onboarding) {
+        this.onboarding = payload.onboarding;
+        this.selectedEmployee = null;
+        this.showForm = true;
+        return;
+      }
+
+      // ⭐ Otherwise normal behavior
+      await this.fetchEmployees();
+      this.closeForm();
+    },
+
     async deleteEmployee(id) {
       try {
         await AdminService.deleteEmployee(id);

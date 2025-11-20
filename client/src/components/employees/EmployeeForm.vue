@@ -10,121 +10,153 @@
         ✕
       </button>
 
-      <h2 class="mb-6 text-2xl font-semibold text-gray-800">
-        {{ employee ? 'Edit Employee' : 'Add Employee' }}
-      </h2>
+      <!-- ⭐ ONBOARDING MODE -->
+      <div v-if="onboardingInfo" class="space-y-6">
+        <h2 class="text-2xl font-semibold text-gray-800">Employee Onboarding Info</h2>
 
-      <form @submit.prevent="handleSubmit" class="space-y-5">
         <div>
-          <label for="name" class="mb-2 block text-sm font-medium text-gray-700">Full Name</label>
-          <input
-            id="name"
-            v-model.trim="form.name"
-            type="text"
-            required
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="Enter employee name"
-          />
+          <p class="text-sm text-gray-600 mb-1">Username</p>
+          <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
+            <span>{{ onboardingInfo.username }}</span>
+            <button @click="copy(onboardingInfo.username)" class="text-purple-600">Copy</button>
+          </div>
         </div>
 
         <div>
-          <label for="email" class="mb-2 block text-sm font-medium text-gray-700">Email</label>
-          <input
-            id="email"
-            v-model.trim="form.email"
-            type="email"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="name@example.com"
-          />
+          <p class="text-sm text-gray-600 mb-1">Temporary Password</p>
+          <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
+            <span>{{ onboardingInfo.tempPassword }}</span>
+            <button @click="copy(onboardingInfo.tempPassword)" class="text-purple-600">Copy</button>
+          </div>
         </div>
 
-        <div>
-          <label for="phone" class="mb-2 block text-sm font-medium text-gray-700"
-            >Phone Number</label
-          >
-          <input
-            id="phone"
-            v-model.trim="form.phone"
-            type="tel"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="Enter employee phone"
-          />
-        </div>
-
-        <div>
-          <label for="position" class="mb-2 block text-sm font-medium text-gray-700"
-            >Position</label
-          >
-          <input
-            id="position"
-            v-model.trim="form.position"
-            type="text"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="Enter employee position"
-          />
-        </div>
-
-        <div>
-          <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700"
-            >Employment Type</label
-          >
-          <select
-            id="employmentType"
-            v-model="form.employmentType"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            <option disabled value="">Select employment type</option>
-            <option value="fullTime">Full-time</option>
-            <option value="partTime">Part-time</option>
-            <option value="contractor">Contractor</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="role" class="mb-2 block text-sm font-medium text-gray-700">Role</label>
-          <input
-            id="role"
-            v-model.trim="form.role"
-            type="text"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="e.g. Nurse, Manager"
-          />
-        </div>
-
-        <div v-if="form.employmentType === 'partTime' || form.employmentType === 'contractor'">
-          <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700"
-            >Hourly Rate</label
-          >
-          <input
-            id="hourlyRate"
-            v-model.number="form.hourlyRate"
-            type="number"
-            min="0"
-            step="0.01"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="Enter hourly rate"
-          />
-        </div>
-
-        <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-
-        <div class="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-            @click="handleClose"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="rounded-lg bg-gradient-to-r from-indigo-400 to-purple-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-            :disabled="saving"
-          >
-            {{ saving ? 'Saving...' : employee ? 'Save Changes' : 'Add Employee' }}
+        <div class="flex justify-end pt-4">
+          <button class="rounded-lg bg-purple-600 text-white px-4 py-2" @click="handleClose">
+            Done
           </button>
         </div>
-      </form>
+      </div>
+
+      <!-- ⭐ ORIGINAL FORM (ADD/EDIT MODE) -->
+      <div v-else>
+        <h2 class="mb-6 text-2xl font-semibold text-gray-800">
+          {{ employee ? 'Edit Employee' : 'Add Employee' }}
+        </h2>
+
+        <form @submit.prevent="handleSubmit" class="space-y-5">
+          <div>
+            <label for="name" class="mb-2 block text-sm font-medium text-gray-700">Full Name</label>
+            <input
+              id="name"
+              v-model.trim="form.name"
+              type="text"
+              required
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter employee name"
+            />
+          </div>
+
+          <div>
+            <label for="email" class="mb-2 block text-sm font-medium text-gray-700">Email</label>
+            <input
+              id="email"
+              v-model.trim="form.email"
+              type="email"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="name@example.com"
+            />
+          </div>
+
+          <div>
+            <label for="phone" class="mb-2 block text-sm font-medium text-gray-700"
+              >Phone Number</label
+            >
+            <input
+              id="phone"
+              v-model.trim="form.phone"
+              type="tel"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter employee phone"
+            />
+          </div>
+
+          <div>
+            <label for="position" class="mb-2 block text-sm font-medium text-gray-700"
+              >Position</label
+            >
+            <input
+              id="position"
+              v-model.trim="form.position"
+              type="text"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter employee position"
+            />
+          </div>
+
+          <div>
+            <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700"
+              >Employment Type</label
+            >
+            <select
+              id="employmentType"
+              v-model="form.employmentType"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option disabled value="">Select employment type</option>
+              <option value="fullTime">Full-time</option>
+              <option value="partTime">Part-time</option>
+              <option value="contractor">Contractor</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="role" class="mb-2 block text-sm font-medium text-gray-700">Role</label>
+            <select
+              id="role"
+              v-model="form.role"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option disabled value="">Select role</option>
+              <option value="employee">Employee</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700"
+              >Hourly Rate</label
+            >
+            <input
+              id="hourlyRate"
+              v-model.number="form.hourlyRate"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter hourly rate"
+            />
+          </div>
+
+          <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+              @click="handleClose"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="rounded-lg bg-gradient-to-r from-indigo-400 to-purple-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+              :disabled="saving"
+            >
+              {{ saving ? 'Saving...' : employee ? 'Save Changes' : 'Add Employee' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -145,24 +177,25 @@ const DEFAULT_FORM = {
 export default {
   name: 'EmployeeForm',
   props: {
-    employee: {
-      type: Object,
-      default: null,
-    },
+    employee: { type: Object, default: null },
   },
   emits: ['close', 'saved'],
+
   data() {
     return {
       form: { ...DEFAULT_FORM },
+      onboardingInfo: null,
       saving: false,
       error: '',
     };
   },
+
   watch: {
     employee: {
       handler(newEmployee) {
         if (!newEmployee) {
           this.form = { ...DEFAULT_FORM };
+          this.onboardingInfo = null;
           return;
         }
 
@@ -172,23 +205,28 @@ export default {
           phone: newEmployee.phone ?? '',
           position: newEmployee.position ?? '',
           employmentType: newEmployee.employmentType || 'fullTime',
-          hourlyRate:
-            newEmployee.hourlyRate === null || newEmployee.hourlyRate === undefined
-              ? null
-              : Number(newEmployee.hourlyRate),
+          hourlyRate: newEmployee.hourlyRate ?? null,
           role: newEmployee.role || 'employee',
         };
 
         this.form = { ...DEFAULT_FORM, ...source };
+        this.onboardingInfo = null;
       },
       immediate: true,
     },
   },
+
   methods: {
     handleClose() {
       this.$emit('close');
       this.error = '';
+      this.onboardingInfo = null;
     },
+
+    copy(text) {
+      navigator.clipboard.writeText(text);
+    },
+
     async handleSubmit() {
       this.saving = true;
       this.error = '';
@@ -204,15 +242,27 @@ export default {
       try {
         const id = this.employee?.id || this.employee?._id;
 
+        let response;
         if (id) {
-          await AdminService.updateStaff(id, payload);
+          response = await AdminService.updateStaff(id, payload);
         } else {
-          await AdminService.addStaff(payload);
+          response = await AdminService.addStaff(payload);
         }
 
-        this.$emit('saved');
-        this.handleClose();
+        // ⭐ Build onboarding object if new employee was created
+        const onboardingPayload = response.data.tempPassword
+          ? {
+              username: response.data.username,
+              tempPassword: response.data.tempPassword,
+            }
+          : null;
+
+        this.$emit('saved', { onboarding: onboardingPayload });
+
+        // Reset the form
         this.form = { ...DEFAULT_FORM };
+
+        this.handleClose();
       } catch (err) {
         this.error = err.response?.data?.msg || 'Unable to save employee';
       } finally {

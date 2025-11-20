@@ -32,3 +32,32 @@ router.get("/me", async (req, res) => {
 });
 
 module.exports = router;
+
+// POST /api/employee/new-password — change current user's password
+router.post('/new-password', async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+
+  if (!newPassword) {
+    return res.status(400).json({ msg: 'New password is required' });
+  }
+
+  try {
+    const db = await connectDB();
+    const user = await db.collection('staff').findOne({ _id: new ObjectId(req.user.id) });
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    // If currentPassword provided, verify it. Otherwise allow if user.mustChangePassword is true
+    if (currentPassword) {
+      const ok = await bcrypt.compare(currentPassword, user.password);
+      if (!ok) return res.status(401).json({ msg: 'Current password is incorrect' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await db.collection('staff').updateOne({ _id: new ObjectId(req.user.id) }, { $set: { password: hashed, mustChangePassword: false, updatedAt: new Date() } });
+
+    res.status(200).json({ msg: 'Password updated' });
+  } catch (err) {
+    console.error('Failed to change password', err);
+    res.status(500).json({ msg: 'Failed to change password' });
+  }
+});
