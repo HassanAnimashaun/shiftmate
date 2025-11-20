@@ -31,6 +31,7 @@ function buildUserResponse(user) {
     username: user.username,
     role: user.role,
     name: user.name || fallbackNameParts || user.username,
+    mustChangePassword: Boolean(user.mustChangePassword),
   };
 }
 
