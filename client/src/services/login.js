@@ -55,7 +55,16 @@ async function logout() {
 }
 
 async function changePassword({ currentPassword, newPassword }) {
-  return api.post('/employee/new-password', { currentPassword, newPassword });
+  const response = await api.post('/employee/new-password', {
+    currentPassword,
+    newPassword,
+  });
+
+  if (userCache) {
+    userCache = { ...userCache, mustChangePassword: false };
+  }
+
+  return response;
 }
 
 export default {

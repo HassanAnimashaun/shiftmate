@@ -84,12 +84,16 @@ export default {
     },
     async handleLogin() {
       try {
-        await authService.login({
+        const user = await authService.login({
           username: this.username,
           password: this.password,
         });
         this.error = '';
-        this.$router.push('/admin');
+        if (user?.mustChangePassword) {
+          this.$router.push('/set-password');
+        } else {
+          this.$router.push('/admin');
+        }
       } catch (err) {
         this.error = err.response?.data?.msg || 'Server error';
       }

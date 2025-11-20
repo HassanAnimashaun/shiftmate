@@ -3,7 +3,8 @@ import { createWebHistory, createRouter } from 'vue-router';
 import Login from '@/views/Login.vue';
 import Dashboard from '@/views/admin/AdminDashboard.vue';
 import EmployeesView from '@/components/employees/EmployeesView.vue';
-import DashboardViews from '@/components/dashboard/dashboardView.vue';
+import DashboardViews from '@/components/dashboard/DashboardView.vue';
+import SetPassword from '@/views/SetPassword.vue';
 import authService from '@/services/login';
 
 async function ensureCurrentUser() {
@@ -46,6 +47,12 @@ export const router = createRouter({
       ],
       meta: { requiresAuth: true },
     },
+    {
+      path: '/set-password',
+      name: 'SetPassword',
+      component: SetPassword,
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
@@ -53,18 +60,22 @@ router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
 
-  if (!requiresAuth && !requiresGuest) {
-    return next();
-  }
-
   const user = await ensureCurrentUser();
 
   if (requiresAuth && !user) {
     return next('/login');
   }
 
+  if (user?.mustChangePassword && to.name !== 'SetPassword') {
+    return next('/set-password');
+  }
+
+  if (to.name === 'SetPassword' && user && !user.mustChangePassword) {
+    return next('/admin');
+  }
+
   if (requiresGuest && user) {
-    return next('/dashboard');
+    return next('/admin');
   }
 
   return next();

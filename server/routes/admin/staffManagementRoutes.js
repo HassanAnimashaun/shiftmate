@@ -1,6 +1,6 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
-import bcrypt from "bcrypt";
+const bcrypt = require("bcrypt");
 
 const { connectDB } = require("../../db");
 const verifyToken = require("../../middleware/authMiddleware");
@@ -8,9 +8,9 @@ const requireRole = require("../../middleware/roleMiddleware");
 
 // Util
 const { sanitizeStaffMember, parseHourlyRate } = require("../../utils/staff");
-import { splitName } from "../../utils/splitName.js";
-import { generateUsername } from "../../utils/generateUsername.js";
-import { generateOtp } from "../../utils/generateOtp.js";
+const { splitName } = require("../../utils/splitName.js");
+const { generateUsername } = require("../../utils/generateUsername.js");
+const { generateOtp } = require("../../utils/generateOtp.js");
 
 const router = express.Router();
 
