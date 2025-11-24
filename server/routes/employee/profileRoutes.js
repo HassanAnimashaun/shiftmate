@@ -50,7 +50,8 @@ router.post("/new-password", async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    const mustVerifyCurrentPassword = !user.mustChangePassword || Boolean(currentPassword);
+    const mustVerifyCurrentPassword =
+      !user.mustChangePassword || Boolean(currentPassword);
 
     if (mustVerifyCurrentPassword) {
       if (!currentPassword) {
@@ -72,6 +73,11 @@ router.post("/new-password", async (req, res) => {
           password: hashed,
           mustChangePassword: false,
           updatedAt: new Date(),
+        },
+        // Remove any temporary secrets once the user sets a real password
+        $unset: {
+          tempOtp: "",
+          tempPassword: "",
         },
       }
     );

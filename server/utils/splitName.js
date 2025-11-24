@@ -1,4 +1,4 @@
-export function splitName(fullName = "") {
+function splitName(fullName = "") {
   const parts = fullName.trim().split(/\s+/);
 
   return {
@@ -7,3 +7,5 @@ export function splitName(fullName = "") {
     lastName: parts.slice(1).join(" ").trim(),
   };
 }
+
+module.exports = { splitName };

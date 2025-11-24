@@ -1,4 +1,4 @@
-export function generateUsername(firstName = "", lastName = "") {
+function generateUsername(firstName = "", lastName = "") {
   const f = firstName.trim().toLowerCase();
   const l = lastName.trim().replace(/\s+/g, "").toLowerCase();
 
@@ -15,3 +15,5 @@ export function generateUsername(firstName = "", lastName = "") {
 
   return null;
 }
+
+module.exports = { generateUsername };

@@ -26,10 +26,15 @@ function buildUserResponse(user) {
     .filter(Boolean)
     .join(" ");
 
+  const employmentType =
+    user.employmentType || (user.role === "admin" ? "admin" : null);
+  const role = employmentType === "admin" ? "admin" : user.role;
+
   return {
     id: user._id.toString(),
     username: user.username,
-    role: user.role,
+    role,
+    employmentType,
     name: user.name || fallbackNameParts || user.username,
     mustChangePassword: Boolean(user.mustChangePassword),
   };
@@ -37,21 +42,46 @@ function buildUserResponse(user) {
 
 // Login Route
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const rawUsername = req.body?.username || "";
+  const password = req.body?.password;
 
-  if (!username || !password) {
+  if (!rawUsername || !password) {
     return res.status(400).json({ msg: "Username and password required" });
   }
 
+  const loginId = rawUsername.trim();
+
   try {
     const db = await connectDB();
-    const user = await db.collection("staff").findOne({ username });
+    const user = await db.collection("staff").findOne({
+      $or: [{ username: loginId }, { email: loginId }],
+    });
 
     if (!user) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const provided = String(password);
+
+    let isMatch = false;
+    if (user.password) {
+      isMatch = await bcrypt.compare(provided, user.password);
+    }
+
+    // Accept the plain temp OTP/password as a fallback (for freshly created accounts)
+    const matchesTempSecret =
+      !isMatch &&
+      (provided === user.tempOtp || provided === user.tempPassword);
+
+    if (!isMatch && matchesTempSecret) {
+      // Re-hash and persist so subsequent logins use the hashed value
+      const hashed = await bcrypt.hash(provided, 10);
+      await db
+        .collection("staff")
+        .updateOne({ _id: user._id }, { $set: { password: hashed } });
+      isMatch = true;
+    }
+
     if (!isMatch) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }

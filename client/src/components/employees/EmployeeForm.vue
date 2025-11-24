@@ -10,25 +10,28 @@
         ✕
       </button>
 
-      <!-- ⭐ ONBOARDING MODE -->
-      <div v-if="onboardingInfo" class="space-y-6">
+      <div v-if="onboarding" class="space-y-6">
         <h2 class="text-2xl font-semibold text-gray-800">Employee Onboarding Info</h2>
 
         <div>
           <p class="text-sm text-gray-600 mb-1">Username</p>
           <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
-            <span>{{ onboardingInfo.username }}</span>
-            <button @click="copy(onboardingInfo.username)" class="text-purple-600">Copy</button>
+            <span class="font-medium text-gray-800">{{ onboarding.username }}</span>
+            <button @click="copy(onboarding.username)" class="text-purple-600 text-sm">Copy</button>
           </div>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Temporary Password</p>
+          <p class="text-sm text-gray-600 mb-1">Temporary OTP</p>
           <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
-            <span>{{ onboardingInfo.tempPassword }}</span>
-            <button @click="copy(onboardingInfo.tempPassword)" class="text-purple-600">Copy</button>
+            <span class="font-medium text-gray-800">{{ onboarding.tempOtp }}</span>
+            <button @click="copy(onboarding.tempOtp)" class="text-purple-600 text-sm">Copy</button>
           </div>
         </div>
+
+        <p class="text-xs text-gray-500">
+          Share this OTP with the employee so they can sign in and change their password.
+        </p>
 
         <div class="flex justify-end pt-4">
           <button class="rounded-lg bg-purple-600 text-white px-4 py-2" @click="handleClose">
@@ -37,7 +40,6 @@
         </div>
       </div>
 
-      <!-- ⭐ ORIGINAL FORM (ADD/EDIT MODE) -->
       <div v-else>
         <h2 class="mb-6 text-2xl font-semibold text-gray-800">
           {{ employee ? 'Edit Employee' : 'Add Employee' }}
@@ -81,9 +83,9 @@
           </div>
 
           <div>
-            <label for="position" class="mb-2 block text-sm font-medium text-gray-700"
-              >Position</label
-            >
+            <label for="position" class="mb-2 block text-sm font-medium text-gray-700">
+              Position
+            </label>
             <input
               id="position"
               v-model.trim="form.position"
@@ -94,9 +96,9 @@
           </div>
 
           <div>
-            <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700"
-              >Employment Type</label
-            >
+            <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700">
+              Employment Type
+            </label>
             <select
               id="employmentType"
               v-model="form.employmentType"
@@ -105,27 +107,14 @@
               <option disabled value="">Select employment type</option>
               <option value="fullTime">Full-time</option>
               <option value="partTime">Part-time</option>
-              <option value="contractor">Contractor</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="role" class="mb-2 block text-sm font-medium text-gray-700">Role</label>
-            <select
-              id="role"
-              v-model="form.role"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option disabled value="">Select role</option>
-              <option value="employee">Employee</option>
               <option value="admin">Admin</option>
             </select>
           </div>
 
           <div>
-            <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700"
-              >Hourly Rate</label
-            >
+            <label for="hourlyRate" class="mb-2 block text-sm font-medium text-gray-700">
+              Hourly Rate
+            </label>
             <input
               id="hourlyRate"
               v-model.number="form.hourlyRate"
@@ -147,6 +136,7 @@
             >
               Cancel
             </button>
+
             <button
               type="submit"
               class="rounded-lg bg-gradient-to-r from-indigo-400 to-purple-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
@@ -171,7 +161,6 @@ const DEFAULT_FORM = {
   position: '',
   employmentType: 'fullTime',
   hourlyRate: null,
-  role: 'employee',
 };
 
 export default {
@@ -184,7 +173,7 @@ export default {
   data() {
     return {
       form: { ...DEFAULT_FORM },
-      onboardingInfo: null,
+      onboarding: null,
       saving: false,
       error: '',
     };
@@ -195,22 +184,22 @@ export default {
       handler(newEmployee) {
         if (!newEmployee) {
           this.form = { ...DEFAULT_FORM };
-          this.onboardingInfo = null;
+          this.onboarding = null;
           return;
         }
 
-        const source = {
+        this.form = {
+          ...DEFAULT_FORM,
           name: newEmployee.name ?? '',
           email: newEmployee.email ?? '',
           phone: newEmployee.phone ?? '',
           position: newEmployee.position ?? '',
-          employmentType: newEmployee.employmentType || 'fullTime',
+          employmentType:
+            newEmployee.employmentType ||
+            (newEmployee.role === 'admin' ? 'admin' : 'fullTime'),
           hourlyRate: newEmployee.hourlyRate ?? null,
-          role: newEmployee.role || 'employee',
         };
-
-        this.form = { ...DEFAULT_FORM, ...source };
-        this.onboardingInfo = null;
+        this.onboarding = null;
       },
       immediate: true,
     },
@@ -220,9 +209,8 @@ export default {
     handleClose() {
       this.$emit('close');
       this.error = '';
-      this.onboardingInfo = null;
+      this.onboarding = null;
     },
-
     copy(text) {
       navigator.clipboard.writeText(text);
     },
@@ -240,29 +228,28 @@ export default {
       };
 
       try {
-        const id = this.employee?.id || this.employee?._id;
+        const id = this.employee?._id || this.employee?.id;
 
-        let response;
         if (id) {
-          response = await AdminService.updateStaff(id, payload);
-        } else {
-          response = await AdminService.addStaff(payload);
+          await AdminService.updateStaff(id, payload);
+          this.$emit('saved');
+          this.form = { ...DEFAULT_FORM };
+          this.handleClose();
+          return;
         }
 
-        // ⭐ Build onboarding object if new employee was created
-        const onboardingPayload = response.data.tempPassword
+        const response = await AdminService.addStaff(payload);
+        const tempSecret = response.data?.tempOtp || response.data?.tempPassword;
+
+        this.onboarding = tempSecret
           ? {
               username: response.data.username,
-              tempPassword: response.data.tempPassword,
+              tempOtp: tempSecret,
             }
           : null;
 
-        this.$emit('saved', { onboarding: onboardingPayload });
-
-        // Reset the form
+        this.$emit('saved', { onboarding: this.onboarding });
         this.form = { ...DEFAULT_FORM };
-
-        this.handleClose();
       } catch (err) {
         this.error = err.response?.data?.msg || 'Unable to save employee';
       } finally {

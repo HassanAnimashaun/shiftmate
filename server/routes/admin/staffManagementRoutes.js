@@ -69,8 +69,13 @@ router.post("/", async (req, res) => {
 
     const { firstName, lastName } = splitName(name);
     const username = generateUsername(firstName, lastName);
-    const otp = generateOtp();
-    const hashedOtp = await bcrypt.hash(otp, 10);
+    const otp = generateOtp(); // plain OTP to share with employee
+    const hashedOtp = await bcrypt.hash(otp, 10); // stored securely for login validation
+
+    const derivedRole =
+      (employmentType === "admin" && "admin") ||
+      (role === "admin" && "admin") ||
+      "employee";
 
     const result = await db.collection("staff").insertOne({
       name,
@@ -82,8 +87,10 @@ router.post("/", async (req, res) => {
       position: position ?? "",
       employmentType: employmentType ?? "",
       hourlyRate: normalizedHourlyRate,
-      role: role ?? "employee",
+      role: derivedRole,
       password: hashedOtp,
+      tempOtp: otp, // persisted so admin can reference it
+      tempPassword: otp,
       mustChangePassword: true,
       createdAt: now,
       updatedAt: now,
@@ -95,6 +102,7 @@ router.post("/", async (req, res) => {
     res.status(201).json({
       ...sanitizeStaffMember(inserted),
       username,
+      tempOtp: otp,
       tempPassword: otp,
       mustChangePassword: true,
     });
@@ -131,6 +139,10 @@ router.put("/:id", async (req, res) => {
           return res.status(400).json({ msg: error });
         }
         updates[field] = value;
+      } else if (field === "employmentType") {
+        updates[field] = req.body[field];
+        // Keep legacy role in sync so existing code paths still work
+        updates.role = req.body[field] === "admin" ? "admin" : "employee";
       } else {
         updates[field] = req.body[field];
       }

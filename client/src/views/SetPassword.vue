@@ -5,7 +5,6 @@
         <h1 class="text-2xl font-bold text-purple-700">Set Your Password</h1>
         <p class="text-sm text-gray-500">Use your temporary password to create a new one.</p>
       </div>
-
       <form class="space-y-5" @submit.prevent="handleSubmit">
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700" for="currentPassword">

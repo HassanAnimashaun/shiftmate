@@ -2,7 +2,7 @@
 <template>
   <nav class="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-3">
     <router-link
-      v-for="item in menuItems"
+      v-for="item in visibleItems()"
       :key="item.key"
       :to="item.to || $route.fullPath"
       class="flex items-center gap-2 px-3 py-2 rounded-lg"
@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import authService from '@/services/login';
+
 export default {
   props: ['activeTab'],
   emits: ['changeTab'],
@@ -45,7 +47,20 @@ export default {
         // { key: 'timeoff', label: 'Time Off Requests', icon: '📝' },
         // { key: 'reports', label: 'Reports', icon: '📈' },
       ],
+      employmentType: null,
+      role: null,
     };
+  },
+  async created() {
+    // Fetch user employment type to determine which nav items to show
+    try {
+      const user = await authService.fetchCurrentUser();
+      this.employmentType =
+        user?.employmentType || (user?.role === 'admin' ? 'admin' : null);
+      this.role = user?.role || null;
+    } catch (err) {
+      console.error('Failed to load user employment type for sidebar', err);
+    }
   },
   methods: {
     handleClick(item, event) {
@@ -59,6 +74,17 @@ export default {
         return this.$route.name === item.routeName;
       }
       return this.activeTab === item.key;
+    },
+    visibleItems() {
+      return this.menuItems.filter(item => {
+        if (
+          item.key === 'employees' &&
+          !(this.employmentType === 'admin' || this.role === 'admin')
+        ) {
+          return false;
+        }
+        return true;
+      });
     },
   },
 };

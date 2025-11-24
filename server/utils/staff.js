@@ -15,11 +15,17 @@ function sanitizeStaffMember(staffMember = {}) {
     employmentType = "",
     hourlyRate = null,
     role = "employee",
+    mustChangePassword = false,
+    tempPassword,
+    tempOtp,
     createdAt,
     updatedAt,
   } = staffMember;
 
   const derivedName = (name || `${firstName} ${lastName}`.trim()).trim();
+  const resolvedEmploymentType =
+    employmentType || (role === "admin" ? "admin" : "");
+  const resolvedRole = resolvedEmploymentType === "admin" ? "admin" : role;
 
   return {
     id: _id?.toString(),
@@ -27,10 +33,13 @@ function sanitizeStaffMember(staffMember = {}) {
     email,
     phone,
     position,
-    employmentType,
+    employmentType: resolvedEmploymentType,
     hourlyRate: hourlyRate === null ? null : Number(hourlyRate),
-    role,
+    role: resolvedRole,
     username,
+    mustChangePassword,
+    tempPassword,
+    tempOtp,
     createdAt,
     updatedAt,
   };

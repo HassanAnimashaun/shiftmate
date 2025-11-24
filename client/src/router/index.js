@@ -38,6 +38,7 @@ export const router = createRouter({
           path: 'employees',
           name: 'employees',
           component: EmployeesView,
+          meta: { requiresEmploymentType: 'admin' },
         },
         {
           path: 'dashboard',
@@ -59,6 +60,8 @@ export const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
+  const requiredEmploymentType = to.matched.find(record => record.meta?.requiresEmploymentType)
+    ?.meta?.requiresEmploymentType;
 
   const user = await ensureCurrentUser();
 
@@ -76,6 +79,18 @@ router.beforeEach(async (to, from, next) => {
 
   if (requiresGuest && user) {
     return next('/admin');
+  }
+
+  if (
+    requiredEmploymentType &&
+    user &&
+    !(
+      user.employmentType === requiredEmploymentType ||
+      user.role === 'admin'
+    )
+  ) {
+    // Non-admins get sent to a safe dashboard route
+    return next('/admin/dashboard');
   }
 
   return next();
