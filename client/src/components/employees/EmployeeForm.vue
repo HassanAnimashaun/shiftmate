@@ -86,13 +86,15 @@
             <label for="position" class="mb-2 block text-sm font-medium text-gray-700">
               Position
             </label>
-            <input
+            <select
               id="position"
-              v-model.trim="form.position"
-              type="text"
+              v-model="form.position"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Enter employee position"
-            />
+            >
+              <option value="employee">Employee</option>
+              <option value="admin">Admin</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">Position controls whether the user has admin access.</p>
           </div>
 
           <div>
@@ -158,7 +160,7 @@ const DEFAULT_FORM = {
   name: '',
   email: '',
   phone: '',
-  position: '',
+  position: 'employee',
   employmentType: 'fullTime',
   hourlyRate: null,
 };
@@ -193,7 +195,7 @@ export default {
           name: newEmployee.name ?? '',
           email: newEmployee.email ?? '',
           phone: newEmployee.phone ?? '',
-          position: newEmployee.position ?? '',
+          position: newEmployee.role ?? newEmployee.position ?? 'employee',
           employmentType:
             newEmployee.employmentType ||
             (newEmployee.role === 'admin' ? 'admin' : 'fullTime'),
@@ -219,8 +221,13 @@ export default {
       this.saving = true;
       this.error = '';
 
+      const derivedRole = this.form.position === 'admin' ? 'admin' : 'employee';
+
       const payload = {
         ...this.form,
+        employmentType:
+          derivedRole === 'admin' ? 'admin' : this.form.employmentType,
+        role: derivedRole,
         hourlyRate:
           this.form.hourlyRate === null || this.form.hourlyRate === ''
             ? null
