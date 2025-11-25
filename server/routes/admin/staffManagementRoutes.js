@@ -7,7 +7,11 @@ const verifyToken = require("../../middleware/authMiddleware");
 const requireRole = require("../../middleware/roleMiddleware");
 
 // Util
-const { sanitizeStaffMember, parseHourlyRate } = require("../../utils/staff");
+const {
+  sanitizeStaffMember,
+  parseHourlyRate,
+  countEmployeesByRole,
+} = require("../../utils/staff");
 const { splitName } = require("../../utils/splitName.js");
 const { generateUsername } = require("../../utils/generateUsername.js");
 const { generateOtp } = require("../../utils/generateOtp.js");
@@ -15,6 +19,58 @@ const { generateOtp } = require("../../utils/generateOtp.js");
 const router = express.Router();
 
 router.use(verifyToken, requireRole("admin"));
+
+// Normalize incoming staff payload so DB fields stay consistent.
+function normalizeStaffPayload(body = {}, { isUpdate = false } = {}) {
+  const normalized = {};
+
+  const name = body.name?.toString().trim();
+  const email = body.email?.toString().trim();
+  const phone = body.phone?.toString().trim();
+  const position = body.position?.toString().trim();
+
+  const employmentRaw = body.employmentType;
+  const normalizedEmploymentType = employmentRaw
+    ? employmentRaw.toString().trim().toLowerCase()
+    : undefined;
+
+  const roleRaw = body.role;
+  const normalizedRole = roleRaw ? roleRaw.toString().trim().toLowerCase() : undefined;
+
+  const isAdmin =
+    normalizedEmploymentType === "admin" || normalizedRole === "admin";
+
+  const resolvedEmploymentType = normalizedEmploymentType ?? (isAdmin ? "admin" : "");
+  const resolvedRole = isAdmin ? "admin" : "employee";
+
+  const hourlyRateRaw = body.hourlyRate;
+  const parsedHourly =
+    hourlyRateRaw === undefined || hourlyRateRaw === null || hourlyRateRaw === ""
+      ? null
+      : Number(hourlyRateRaw);
+
+  const base = {
+    name,
+    email,
+    phone,
+    position,
+    employmentType: resolvedEmploymentType,
+    hourlyRate: parsedHourly,
+    role: resolvedRole,
+  };
+
+  if (isUpdate) {
+    for (const [key, value] of Object.entries(base)) {
+      if (Object.prototype.hasOwnProperty.call(body, key)) {
+        normalized[key] = value;
+      }
+    }
+  } else {
+    Object.assign(normalized, base);
+  }
+
+  return normalized;
+}
 
 // GET /api/admin/staff — fetch all staff members
 router.get("/", async (req, res) => {
@@ -36,9 +92,7 @@ router.get("/", async (req, res) => {
 router.get("/count", async (req, res) => {
   try {
     const db = await connectDB();
-    const employeeCount = await db
-      .collection("staff")
-      .countDocuments({ role: "employee" });
+    const employeeCount = await countEmployeesByRole(db);
 
     res.status(200).json({ employeeCount });
   } catch (err) {
@@ -49,8 +103,15 @@ router.get("/count", async (req, res) => {
 
 // POST /api/admin/staff — add a new staff member
 router.post("/", async (req, res) => {
-  const { name, email, phone, position, employmentType, hourlyRate, role } =
-    req.body ?? {};
+  const {
+    name,
+    email,
+    phone,
+    position,
+    employmentType,
+    hourlyRate,
+    role,
+  } = normalizeStaffPayload(req.body ?? {});
 
   if (!name) {
     return res.status(400).json({ msg: "Name is required" });
@@ -72,11 +133,6 @@ router.post("/", async (req, res) => {
     const otp = generateOtp(); // plain OTP to share with employee
     const hashedOtp = await bcrypt.hash(otp, 10); // stored securely for login validation
 
-    const derivedRole =
-      (employmentType === "admin" && "admin") ||
-      (role === "admin" && "admin") ||
-      "employee";
-
     const result = await db.collection("staff").insertOne({
       name,
       firstName,
@@ -87,7 +143,7 @@ router.post("/", async (req, res) => {
       position: position ?? "",
       employmentType: employmentType ?? "",
       hourlyRate: normalizedHourlyRate,
-      role: derivedRole,
+      role: role ?? "employee",
       password: hashedOtp,
       tempOtp: otp, // persisted so admin can reference it
       tempPassword: otp,
@@ -120,33 +176,13 @@ router.put("/:id", async (req, res) => {
     return res.status(400).json({ msg: "Invalid staff ID" });
   }
 
-  const allowedFields = [
-    "name",
-    "email",
-    "phone",
-    "position",
-    "employmentType",
-    "hourlyRate",
-    "role",
-  ];
-
-  const updates = {};
-  for (const field of allowedFields) {
-    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-      if (field === "hourlyRate") {
-        const { value, error } = parseHourlyRate(req.body[field]);
-        if (error) {
-          return res.status(400).json({ msg: error });
-        }
-        updates[field] = value;
-      } else if (field === "employmentType") {
-        updates[field] = req.body[field];
-        // Keep legacy role in sync so existing code paths still work
-        updates.role = req.body[field] === "admin" ? "admin" : "employee";
-      } else {
-        updates[field] = req.body[field];
-      }
+  const updates = normalizeStaffPayload(req.body ?? {}, { isUpdate: true });
+  if (updates.hourlyRate !== undefined) {
+    const { value, error } = parseHourlyRate(updates.hourlyRate);
+    if (error) {
+      return res.status(400).json({ msg: error });
     }
+    updates.hourlyRate = value;
   }
 
   if (Object.keys(updates).length === 0) {
