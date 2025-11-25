@@ -37,11 +37,8 @@ function normalizeStaffPayload(body = {}, { isUpdate = false } = {}) {
   const roleRaw = body.role;
   const normalizedRole = roleRaw ? roleRaw.toString().trim().toLowerCase() : undefined;
 
-  const isAdmin =
-    normalizedEmploymentType === "admin" || normalizedRole === "admin";
-
-  const resolvedEmploymentType = normalizedEmploymentType ?? (isAdmin ? "admin" : "");
-  const resolvedRole = isAdmin ? "admin" : "employee";
+  const resolvedRole = normalizedRole === "admin" ? "admin" : "employee";
+  const resolvedEmploymentType = resolvedRole === "employee" ? normalizedEmploymentType ?? "" : "";
 
   const hourlyRateRaw = body.hourlyRate;
   const parsedHourly =

@@ -23,9 +23,8 @@ function sanitizeStaffMember(staffMember = {}) {
   } = staffMember;
 
   const derivedName = (name || `${firstName} ${lastName}`.trim()).trim();
-  const resolvedEmploymentType =
-    employmentType || (role === "admin" ? "admin" : "");
-  const resolvedRole = resolvedEmploymentType === "admin" ? "admin" : role;
+  const resolvedRole = role || "employee";
+  const resolvedEmploymentType = resolvedRole === "employee" ? employmentType || "" : "";
 
   return {
     id: _id?.toString(),
