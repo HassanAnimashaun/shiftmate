@@ -88,7 +88,7 @@
               v-model="form.role"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option disabled value="">Select employment type</option>
+              <option disabled value="">Select role</option>
               <option value="employee">Employee</option>
               <option value="admin">Admin</option>
             </select>
@@ -105,10 +105,11 @@
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
+              <option value="lead">Lead</option>
+              <option value="manager">Manager</option>
             </select>
             <p class="mt-1 text-xs text-gray-500">
-              Position controls whether the user has admin access.
+              Position is for internal reference. Admin access is controlled by the role above.
             </p>
           </div>
 
@@ -174,6 +175,7 @@ const DEFAULT_FORM = {
   name: '',
   email: '',
   phone: '',
+  role: 'employee',
   position: '',
   employmentType: 'fullTime',
   hourlyRate: null,
@@ -198,8 +200,10 @@ export default {
   watch: {
     'form.role'(newRole) {
       if (newRole === 'admin') {
-        this.form.employmentType = 'admin';
-      } else if (this.form.employmentType === 'admin') {
+        this.form.position = '';
+        this.form.employmentType = '';
+        this.form.hourlyRate = null;
+      } else if (!this.form.employmentType) {
         this.form.employmentType = 'fullTime';
       }
     },
@@ -216,12 +220,16 @@ export default {
           name: newEmployee.name ?? '',
           email: newEmployee.email ?? '',
           phone: newEmployee.phone ?? '',
+          role: newEmployee.role ?? 'employee',
           position: newEmployee.position ?? '',
           employmentType:
             newEmployee.role === 'employee'
-              ? (newEmployee.employmentType ?? 'fullTime')
-              : newEmployee.employmentType || (newEmployee.role === 'admin' ? 'admin' : 'fullTime'),
-          hourlyRate: newEmployee.hourlyRate ?? null,
+              ? newEmployee.employmentType || 'fullTime'
+              : '',
+          hourlyRate:
+            newEmployee.role === 'employee'
+              ? newEmployee.hourlyRate ?? null
+              : null,
         };
         this.onboarding = null;
       },
@@ -243,16 +251,17 @@ export default {
       this.saving = true;
       this.error = '';
 
-      const derivedRole = this.form.position === 'admin' ? 'admin' : 'employee';
+      const derivedRole = this.form.role === 'admin' ? 'admin' : 'employee';
 
       const payload = {
         ...this.form,
-        employmentType: derivedRole === 'admin' ? 'admin' : this.form.employmentType,
+        position: derivedRole === 'employee' ? this.form.position : '',
+        employmentType: derivedRole === 'employee' ? this.form.employmentType : '',
         role: derivedRole,
         hourlyRate:
-          this.form.hourlyRate === null || this.form.hourlyRate === ''
-            ? null
-            : Number(this.form.hourlyRate),
+          derivedRole === 'employee' && this.form.hourlyRate !== null && this.form.hourlyRate !== ''
+            ? Number(this.form.hourlyRate)
+            : null,
       };
 
       try {
