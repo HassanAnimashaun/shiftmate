@@ -26,9 +26,8 @@ function buildUserResponse(user) {
     .filter(Boolean)
     .join(" ");
 
-  const employmentType =
-    user.employmentType || (user.role === "admin" ? "admin" : null);
-  const role = employmentType === "admin" ? "admin" : user.role;
+  const role = user.role || "employee";
+  const employmentType = role === "employee" ? user.employmentType || "" : "";
 
   return {
     id: user._id.toString(),
