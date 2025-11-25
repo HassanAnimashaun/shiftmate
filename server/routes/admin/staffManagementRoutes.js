@@ -29,23 +29,27 @@ function normalizeStaffPayload(body = {}, { isUpdate = false } = {}) {
   const phone = body.phone?.toString().trim();
   const position = body.position?.toString().trim();
 
-  const employmentRaw = body.employmentType;
-  const normalizedEmploymentType = employmentRaw
-    ? employmentRaw.toString().trim().toLowerCase()
-    : undefined;
+  // Normalize role
+  const rawRole = body.role?.toString().trim().toLowerCase();
+  const isAdmin = rawRole === "admin";
 
-  const roleRaw = body.role;
-  const normalizedRole = roleRaw ? roleRaw.toString().trim().toLowerCase() : undefined;
+  const normalizedRole = isAdmin ? "admin" : "employee";
 
-  const isAdmin =
-    normalizedEmploymentType === "admin" || normalizedRole === "admin";
+  // Normalize employemetType
+  let employmentType = body.employmentType;
 
-  const resolvedEmploymentType = normalizedEmploymentType ?? (isAdmin ? "admin" : "");
-  const resolvedRole = isAdmin ? "admin" : "employee";
+  if (isAdmin) {
+    employmentType = null;
+  } else if (employmentType) {
+    employmentType = employmentType.toString().trim().toLowerCase();
+  }
 
+  // Normalize hourly rate
   const hourlyRateRaw = body.hourlyRate;
-  const parsedHourly =
-    hourlyRateRaw === undefined || hourlyRateRaw === null || hourlyRateRaw === ""
+  const hourlyRate =
+    hourlyRateRaw === undefined ||
+    hourlyRateRaw === null ||
+    hourlyRateRaw === ""
       ? null
       : Number(hourlyRateRaw);
 
@@ -54,15 +58,16 @@ function normalizeStaffPayload(body = {}, { isUpdate = false } = {}) {
     email,
     phone,
     position,
-    employmentType: resolvedEmploymentType,
-    hourlyRate: parsedHourly,
-    role: resolvedRole,
+    employmentType,
+    hourlyRate,
+    role: normalizedRole,
   };
 
+  // Support update-only mode
   if (isUpdate) {
-    for (const [key, value] of Object.entries(base)) {
+    for (const key in base) {
       if (Object.prototype.hasOwnProperty.call(body, key)) {
-        normalized[key] = value;
+        normalized[key] = base[key];
       }
     }
   } else {
@@ -103,15 +108,8 @@ router.get("/count", async (req, res) => {
 
 // POST /api/admin/staff — add a new staff member
 router.post("/", async (req, res) => {
-  const {
-    name,
-    email,
-    phone,
-    position,
-    employmentType,
-    hourlyRate,
-    role,
-  } = normalizeStaffPayload(req.body ?? {});
+  const { name, email, phone, position, employmentType, hourlyRate, role } =
+    normalizeStaffPayload(req.body ?? {});
 
   if (!name) {
     return res.status(400).json({ msg: "Name is required" });
@@ -130,10 +128,10 @@ router.post("/", async (req, res) => {
 
     const { firstName, lastName } = splitName(name);
     const username = generateUsername(firstName, lastName);
-    const otp = generateOtp(); // plain OTP to share with employee
-    const hashedOtp = await bcrypt.hash(otp, 10); // stored securely for login validation
+    const otp = generateOtp();
+    const hashedOtp = await bcrypt.hash(otp, 10);
 
-    const result = await db.collection("staff").insertOne({
+    const insertDoc = {
       name,
       firstName,
       lastName,
@@ -141,20 +139,26 @@ router.post("/", async (req, res) => {
       email: email ?? "",
       phone: phone ?? "",
       position: position ?? "",
-      employmentType: employmentType ?? "",
       hourlyRate: normalizedHourlyRate,
-      role: role ?? "employee",
+      role: role ?? "employee", // << ROLE ALWAYS INSERTED
       password: hashedOtp,
-      tempOtp: otp, // persisted so admin can reference it
+      tempOtp: otp,
       tempPassword: otp,
       mustChangePassword: true,
       createdAt: now,
       updatedAt: now,
-    });
+    };
+
+    if (employmentType !== null && employmentType !== undefined) {
+      insertDoc.employmentType = employmentType;
+    }
+
+    const result = await db.collection("staff").insertOne(insertDoc);
 
     const inserted = await db
       .collection("staff")
       .findOne({ _id: result.insertedId }, { projection: { password: 0 } });
+
     res.status(201).json({
       ...sanitizeStaffMember(inserted),
       username,

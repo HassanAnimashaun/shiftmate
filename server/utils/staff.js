@@ -22,10 +22,15 @@ function sanitizeStaffMember(staffMember = {}) {
     updatedAt,
   } = staffMember;
 
+  let normalizedEmploymentType = employmentType;
+  if (normalizedEmploymentType) {
+    normalizedEmploymentType = normalizedEmploymentType
+      .toString()
+      .trim()
+      .toLowerCase();
+  }
+
   const derivedName = (name || `${firstName} ${lastName}`.trim()).trim();
-  const resolvedEmploymentType =
-    employmentType || (role === "admin" ? "admin" : "");
-  const resolvedRole = resolvedEmploymentType === "admin" ? "admin" : role;
 
   return {
     id: _id?.toString(),
@@ -33,9 +38,9 @@ function sanitizeStaffMember(staffMember = {}) {
     email,
     phone,
     position,
-    employmentType: resolvedEmploymentType,
+    employmentType: employmentType || null,
     hourlyRate: hourlyRate === null ? null : Number(hourlyRate),
-    role: resolvedRole,
+    role,
     username,
     mustChangePassword,
     tempPassword,

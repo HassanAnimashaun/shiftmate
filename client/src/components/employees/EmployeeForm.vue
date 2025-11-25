@@ -88,10 +88,13 @@
               v-model="form.role"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option disabled value="">Select employment type</option>
+              <option disabled value="">Select Role</option>
               <option value="employee">Employee</option>
               <option value="admin">Admin</option>
             </select>
+            <p class="mt-1 text-xs text-gray-500">
+              Position controls whether the user has admin access.
+            </p>
           </div>
 
           <!-- EMPLOYEE ONLY -->
@@ -99,17 +102,12 @@
             <label for="position" class="mb-2 block text-sm font-medium text-gray-700">
               Position
             </label>
-            <select
+            <input
               id="position"
               v-model="form.position"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
-            </select>
-            <p class="mt-1 text-xs text-gray-500">
-              Position controls whether the user has admin access.
-            </p>
+              placeholder="Enter Position"
+            />
           </div>
 
           <div v-if="form.role === 'employee'">
@@ -122,8 +120,8 @@
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option disabled value="">Select employment type</option>
-              <option value="fullTime">Full-time</option>
-              <option value="partTime">Part-time</option>
+              <option value="fulltime">Full-time</option>
+              <option value="parttime">Part-time</option>
             </select>
           </div>
 
@@ -174,8 +172,9 @@ const DEFAULT_FORM = {
   name: '',
   email: '',
   phone: '',
+  role: '',
   position: '',
-  employmentType: 'fullTime',
+  employmentType: 'fulltime',
   hourlyRate: null,
 };
 
@@ -198,9 +197,9 @@ export default {
   watch: {
     'form.role'(newRole) {
       if (newRole === 'admin') {
-        this.form.employmentType = 'admin';
-      } else if (this.form.employmentType === 'admin') {
-        this.form.employmentType = 'fullTime';
+        this.form.employmentType = null;
+      } else if (!this.form.employmentType) {
+        this.form.employmentType = 'fulltime';
       }
     },
     employee: {
@@ -217,10 +216,9 @@ export default {
           email: newEmployee.email ?? '',
           phone: newEmployee.phone ?? '',
           position: newEmployee.position ?? '',
+          role: newEmployee.role ?? '',
           employmentType:
-            newEmployee.role === 'employee'
-              ? (newEmployee.employmentType ?? 'fullTime')
-              : newEmployee.employmentType || (newEmployee.role === 'admin' ? 'admin' : 'fullTime'),
+            newEmployee.role === 'employee' ? (newEmployee.employmentType ?? 'fulltime') : null,
           hourlyRate: newEmployee.hourlyRate ?? null,
         };
         this.onboarding = null;
@@ -243,11 +241,11 @@ export default {
       this.saving = true;
       this.error = '';
 
-      const derivedRole = this.form.position === 'admin' ? 'admin' : 'employee';
+      const derivedRole = this.form.role === 'admin' ? 'admin' : 'employee';
 
       const payload = {
         ...this.form,
-        employmentType: derivedRole === 'admin' ? 'admin' : this.form.employmentType,
+        employmentType: derivedRole === 'admin' ? null : this.form.employmentType,
         role: derivedRole,
         hourlyRate:
           this.form.hourlyRate === null || this.form.hourlyRate === ''

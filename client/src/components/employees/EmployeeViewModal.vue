@@ -86,7 +86,6 @@ export default {
       const map = {
         fullTime: 'Full-time',
         partTime: 'Part-time',
-        admin: 'Admin',
       };
       return map[type] || type;
     },

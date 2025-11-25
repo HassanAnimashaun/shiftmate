@@ -84,10 +84,7 @@ router.beforeEach(async (to, from, next) => {
   if (
     requiredEmploymentType &&
     user &&
-    !(
-      user.employmentType === requiredEmploymentType ||
-      user.role === 'admin'
-    )
+    !(user.employmentType === requiredEmploymentType || user.role === 'admin')
   ) {
     // Non-admins get sent to a safe dashboard route
     return next('/admin/dashboard');

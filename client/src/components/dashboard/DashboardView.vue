@@ -4,7 +4,7 @@
       <h2 class="text-2xl font-semibold text-gray-800">Dashboard Overview</h2>
     </div>
 
-    <OverviewPanel :employeeCount="employeeCount" />
+    <OverviewPanel :employeeCount="employeeCount" :loading="loading" />
 
     <!-- ACTIVITIES -->
     <div class="flex flex-col items-start mb-3 gap-3">
@@ -27,7 +27,8 @@ export default {
   },
   data() {
     return {
-      employeeCount: 0,
+      employeeCount: null,
+      loading: true,
     };
   },
 
@@ -42,6 +43,8 @@ export default {
         this.employeeCount = res.data.employeeCount ?? 0;
       } catch (err) {
         console.log(err);
+      } finally {
+        this.loading = false;
       }
     },
   },
