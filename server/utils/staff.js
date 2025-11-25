@@ -61,7 +61,12 @@ function parseHourlyRate(value) {
   return { value: numericValue };
 }
 
+async function countEmployeesByRole(db) {
+  return db.collection("staff").countDocuments({ role: "employee" });
+}
+
 module.exports = {
   sanitizeStaffMember,
   parseHourlyRate,
+  countEmployeesByRole,
 };

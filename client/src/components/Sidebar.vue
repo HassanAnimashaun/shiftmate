@@ -55,8 +55,8 @@ export default {
     // Fetch user employment type to determine which nav items to show
     try {
       const user = await authService.fetchCurrentUser();
-      this.employmentType =
-        user?.employmentType || (user?.role === 'admin' ? 'admin' : null);
+      // Normalize employmentType to lowercase for consistent checks
+      this.employmentType = user?.employmentType ? String(user.employmentType).toLowerCase() : null;
       this.role = user?.role || null;
     } catch (err) {
       console.error('Failed to load user employment type for sidebar', err);
@@ -77,10 +77,7 @@ export default {
     },
     visibleItems() {
       return this.menuItems.filter(item => {
-        if (
-          item.key === 'employees' &&
-          !(this.employmentType === 'admin' || this.role === 'admin')
-        ) {
+        if (item.key === 'employees' && this.employmentType === 'admin') {
           return false;
         }
         return true;
