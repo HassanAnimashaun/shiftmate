@@ -15,8 +15,10 @@
       <!-- EMPLOYEE DETAILS -->
       <div class="flex flex-col gap-3 text-gray-700">
         <div>
-          <p class="text-sm font-semibold text-gray-600">Employment Type</p>
-          <p class="text-base">{{ formatEmploymentType(employee?.employmentType) || 'Employee' }}</p>
+          <p class="text-sm font-semibold text-gray-600">Role</p>
+          <p class="text-base">
+            {{ formatEmploymentRole(employee.role) }}
+          </p>
         </div>
 
         <div v-if="employee?.employmentType">
@@ -73,6 +75,13 @@ export default {
   },
   emits: ['close'],
   methods: {
+    formatEmploymentRole(type) {
+      const map = {
+        admin: 'Admin',
+        employee: 'Employee',
+      };
+      return map[type] || type;
+    },
     formatEmploymentType(type) {
       const map = {
         fullTime: 'Full-time',
