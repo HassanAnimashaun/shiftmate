@@ -19,10 +19,10 @@
 
 <script>
 import DashHeader from '@/components/Header.vue';
-import DashSidebar from '@/components/admin/AdminSidebar.vue';
+import DashSidebar from '@/components/employee/EmployeeSidebar.vue';
 
 export default {
-  name: 'AdminDashboard',
+  name: 'EmployeeDashboard',
   components: {
     DashHeader,
     DashSidebar,
@@ -35,10 +35,11 @@ export default {
   methods: {
     setTab(tab) {
       this.activeTab = tab;
-      if (tab === 'employees' && this.$route.name !== 'employees') {
-        this.$router.push({ name: 'employees' });
+      if (tab === 'dashboard' && this.$route.name !== 'EmployeeDashboard-page') {
+        this.$router.push({ name: 'EmployeeDashboard-page' });
       }
     },
   },
 };
 </script>
+` `

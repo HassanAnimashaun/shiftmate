@@ -32,20 +32,10 @@ export default {
         {
           key: 'dashboard',
           label: 'Dashboard',
-          icon: '📊',
-          to: '/admin/dashboard',
-          routeName: 'AdminDashboard-page',
+          icon: '🏖️',
+          to: '/employee',
+          routeName: 'EmployeeDashboard-page',
         },
-        // { key: 'schedule', label: 'Schedule', icon: '📅' },
-        {
-          key: 'employees',
-          label: 'Employees',
-          icon: '👥',
-          to: '/admin/employees',
-          routeName: 'employees',
-        },
-        // { key: 'timeoff', label: 'Time Off Requests', icon: '📝' },
-        // { key: 'reports', label: 'Reports', icon: '📈' },
       ],
       role: null,
     };
@@ -54,7 +44,6 @@ export default {
     // Fetch user employment type to determine which nav items to show
     try {
       const user = await authService.fetchCurrentUser();
-      // Normalize employmentType to lowercase for consistent checks
       this.role = user?.role || null;
     } catch (err) {
       console.error('Failed to load user employment type for sidebar', err);
@@ -75,7 +64,7 @@ export default {
     },
     visibleItems() {
       return this.menuItems.filter(item => {
-        if ((item.key === 'employees' || item.key === 'dashboard') && this.role !== 'admin') {
+        if ((item.key === 'employees' || item.key === 'dashboard') && this.role !== 'employee') {
           return false;
         }
         return true;

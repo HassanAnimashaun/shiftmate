@@ -16,8 +16,8 @@
 
 <script>
 import AdminService from '@/services/adminService';
-import ActivityPanel from '@/components/ActivityPanels.vue';
-import OverviewPanel from '@/components/dashboard/OverviewPanels.vue';
+import ActivityPanel from '@/components/admin/dashboard/ActivityPanels.vue';
+import OverviewPanel from '@/components/admin/dashboard/OverviewPanels.vue';
 
 export default {
   name: 'DashboardView',

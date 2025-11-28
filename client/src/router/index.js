@@ -1,9 +1,10 @@
 import { createWebHistory, createRouter } from 'vue-router';
 
 import Login from '@/views/Login.vue';
-import Dashboard from '@/views/admin/AdminDashboard.vue';
-import EmployeesView from '@/components/employees/EmployeesView.vue';
-import DashboardViews from '@/components/dashboard/DashboardView.vue';
+import AdminDashboardLayout from '@/views/admin/AdminDashboard.vue';
+import EmployeesView from '@/components/admin/employees/EmployeesView.vue';
+import DashboardViews from '@/components/admin/dashboard/DashboardView.vue';
+import EmployeeDashboard from '@/views/employee/EmployeeDashboard.vue';
 import SetPassword from '@/views/SetPassword.vue';
 import authService from '@/services/login';
 
@@ -26,9 +27,15 @@ export const router = createRouter({
       meta: { requiresGuest: true },
     },
     {
+      path: '/employee',
+      name: 'EmployeeDashboard-page',
+      component: EmployeeDashboard,
+      meta: { requiresAuth: true, requiresEmploymentType: 'employee' },
+    },
+    {
       path: '/admin',
       name: 'AdminDashboard-page',
-      component: Dashboard,
+      component: AdminDashboardLayout,
       children: [
         {
           path: '',
@@ -38,7 +45,6 @@ export const router = createRouter({
           path: 'employees',
           name: 'employees',
           component: EmployeesView,
-          meta: { requiresEmploymentType: 'admin' },
         },
         {
           path: 'dashboard',
@@ -46,7 +52,7 @@ export const router = createRouter({
           component: DashboardViews,
         },
       ],
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresEmploymentType: 'admin' },
     },
     {
       path: '/set-password',
@@ -64,7 +70,6 @@ router.beforeEach(async (to, from, next) => {
     ?.meta?.requiresEmploymentType;
 
   const user = await ensureCurrentUser();
-
   if (requiresAuth && !user) {
     return next('/login');
   }
@@ -86,8 +91,8 @@ router.beforeEach(async (to, from, next) => {
     user &&
     !(user.employmentType === requiredEmploymentType || user.role === 'admin')
   ) {
-    // Non-admins get sent to a safe dashboard route
-    return next('/admin/dashboard');
+    // Send users to their own dashboard if they hit a restricted route
+    return next('/employee');
   }
 
   return next();
