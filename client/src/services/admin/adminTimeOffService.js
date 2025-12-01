@@ -1,4 +1,13 @@
-// Placeholder for admin time-off related API calls.
-const AdminTimeOffService = {};
+import api from '../api';
+const AdminTimeOffService = {
+  // Get all time off request
+  getRequests() {
+    return api.get('/admin/timeoff');
+  },
+  // Get pending time off request count
+  getPendingCount() {
+    return api.get('/admin/timeoff/count');
+  },
+};
 
 export default AdminTimeOffService;

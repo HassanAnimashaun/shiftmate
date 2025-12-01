@@ -70,8 +70,13 @@ async function countEmployeesByRole(db) {
   return db.collection("staff").countDocuments({ role: "employee" });
 }
 
+async function countTimeOffRequest(db) {
+  return db.collection("timeOffRequests").countDocuments({ status: "pending" });
+}
+
 module.exports = {
   sanitizeStaffMember,
   parseHourlyRate,
   countEmployeesByRole,
+  countTimeOffRequest,
 };

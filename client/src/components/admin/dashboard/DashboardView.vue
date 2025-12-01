@@ -4,7 +4,11 @@
       <h2 class="text-2xl font-semibold text-gray-800">Dashboard Overview</h2>
     </div>
 
-    <OverviewPanel :employeeCount="employeeCount" :loading="loading" />
+    <OverviewPanel
+      :employeeCount="employeeCount"
+      :pendingRequestCount="pendingRequestCount"
+      :loading="loading"
+    />
 
     <!-- ACTIVITIES -->
     <div class="flex flex-col items-start mb-3 gap-3">
@@ -16,6 +20,7 @@
 
 <script>
 import AdminService from '@/services/admin/adminStaffService';
+import AdminTimeOffService from '@/services/admin/adminTimeOffService';
 import ActivityPanel from '@/components/admin/dashboard/ActivityPanels.vue';
 import OverviewPanel from '@/components/admin/dashboard/OverviewPanels.vue';
 
@@ -28,12 +33,13 @@ export default {
   data() {
     return {
       employeeCount: null,
+      pendingRequestCount: null,
       loading: true,
     };
   },
 
   async mounted() {
-    await this.fetchEmployeeCount();
+    await Promise.all([this.fetchEmployeeCount(), this.fetchPendingRequests()]);
   },
 
   methods: {
@@ -41,6 +47,14 @@ export default {
       try {
         const res = await AdminService.totalEmployees();
         this.employeeCount = res.data.employeeCount ?? 0;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async fetchPendingRequests() {
+      try {
+        const res = await AdminTimeOffService.getPendingCount();
+        this.pendingRequestCount = res.data?.countRequest ?? 0;
       } catch (err) {
         console.log(err);
       } finally {

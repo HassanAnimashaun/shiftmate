@@ -9,37 +9,38 @@
     </p>
     <p v-else-if="loading" class="mb-4 text-sm text-gray-500">Loading Request Time Off...</p>
 
-    <requestList v-if="!loading" :employees="employees" />
+    <requestList v-if="!loading" :request="request" />
   </div>
 </template>
 
 <script>
 import requestList from './RequestList.vue';
-import AdminService from '@/services/admin/adminStaffService';
+import AdminTimeOffService from '@/services/admin/adminTimeOffService';
 export default {
-  components: requestList,
+  components: { requestList },
+
   data() {
     return {
-      employees: [],
+      request: [],
       loading: false,
       error: '',
     };
   },
   async mounted() {
-    await this.fetchRequest();
+    await this.getRequests();
   },
 
   methods: {
-    async fetchRequest() {
+    async getRequests() {
       try {
         this.loading = true;
         this.error = '';
-        const res = await AdminService.getAllStaff();
-        this.employees = Array.isArray(res.data) ? res.data : [];
+        const res = await AdminTimeOffService.getRequests();
+        this.request = Array.isArray(res.data) ? res.data : [];
       } catch (err) {
-        console.error('Failed to load employees:', err);
-        this.error = err.response?.data?.msg || 'Failed to load employees';
-        this.employees = [];
+        console.error('Failed to load requests:', err);
+        this.error = err.response?.data?.msg || 'Failed to load requests';
+        this.request = [];
       }
       this.loading = false;
     },
