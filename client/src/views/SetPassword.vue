@@ -88,7 +88,7 @@
 </template>
 
 <script>
-import authService from '@/services/login';
+import authService from '@/services/auth/login';
 
 export default {
   name: 'SetPassword',

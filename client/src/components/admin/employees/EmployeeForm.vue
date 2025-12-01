@@ -166,7 +166,7 @@
 </template>
 
 <script>
-import AdminService from '@/services/adminService';
+import AdminService from '@/services/admin/adminStaffService';
 
 const DEFAULT_FORM = {
   name: '',

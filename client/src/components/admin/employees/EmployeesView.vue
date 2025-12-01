@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import AdminService from '@/services/adminService';
+import AdminService from '@/services/admin/adminStaffService';
 import AddEmployeeButton from './AddEmployeeButton.vue';
 import EmployeeList from './EmployeeList.vue';
 import EmployeeForm from './EmployeeForm.vue';

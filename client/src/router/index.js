@@ -1,17 +1,17 @@
 import { createWebHistory, createRouter } from 'vue-router';
 
 import Login from '@/views/Login.vue';
-import AdminDashboardLayout from '@/views/admin/AdminDashboard.vue';
-import EmployeesView from '@/components/admin/employees/EmployeesView.vue';
-import DashboardViews from '@/components/admin/dashboard/DashboardView.vue';
-import EmployeeDashboard from '@/views/employee/EmployeeDashboard.vue';
 import SetPassword from '@/views/SetPassword.vue';
-import authService from '@/services/login';
+import authService from '@/services/auth/login';
+import { adminRoutes } from './admin.routes';
+import { employeeRoutes } from './employee.routes';
 
 async function ensureCurrentUser() {
   const user = await authService.fetchCurrentUser();
   return user;
 }
+
+const getDefaultRoute = user => (user?.role === 'admin' ? '/admin' : '/employee');
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -26,34 +26,8 @@ export const router = createRouter({
       component: Login,
       meta: { requiresGuest: true },
     },
-    {
-      path: '/employee',
-      name: 'EmployeeDashboard-page',
-      component: EmployeeDashboard,
-      meta: { requiresAuth: true, requiresEmploymentType: 'employee' },
-    },
-    {
-      path: '/admin',
-      name: 'AdminDashboard-page',
-      component: AdminDashboardLayout,
-      children: [
-        {
-          path: '',
-          redirect: { name: 'employees' },
-        },
-        {
-          path: 'employees',
-          name: 'employees',
-          component: EmployeesView,
-        },
-        {
-          path: 'dashboard',
-          name: 'dashboard',
-          component: DashboardViews,
-        },
-      ],
-      meta: { requiresAuth: true, requiresEmploymentType: 'admin' },
-    },
+    employeeRoutes,
+    adminRoutes,
     {
       path: '/set-password',
       name: 'SetPassword',
@@ -79,20 +53,23 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.name === 'SetPassword' && user && !user.mustChangePassword) {
-    return next('/admin');
+    return next(getDefaultRoute(user));
   }
 
   if (requiresGuest && user) {
-    return next('/admin');
+    return next(getDefaultRoute(user));
   }
 
   if (
     requiredEmploymentType &&
     user &&
-    !(user.employmentType === requiredEmploymentType || user.role === 'admin')
+    !(
+      user.employmentType === requiredEmploymentType ||
+      user.role === requiredEmploymentType ||
+      user.role === 'admin'
+    )
   ) {
-    // Send users to their own dashboard if they hit a restricted route
-    return next('/employee');
+    return next(getDefaultRoute(user));
   }
 
   return next();

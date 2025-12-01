@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <nav class="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-3">
+  <nav class="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-3 w-max">
     <router-link
       v-for="item in visibleItems()"
       :key="item.key"
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import authService from '@/services/login';
+import authService from '@/services/auth/login';
 
 export default {
   props: ['activeTab'],
@@ -30,11 +30,11 @@ export default {
     return {
       menuItems: [
         {
-          key: 'dashboard',
-          label: 'Dashboard',
+          key: 'request',
+          label: 'Request Time Off',
           icon: '🏖️',
-          to: '/employee',
-          routeName: 'EmployeeDashboard-page',
+          to: { name: 'employee-request' },
+          routeName: 'employee-request',
         },
       ],
       role: null,
@@ -64,7 +64,7 @@ export default {
     },
     visibleItems() {
       return this.menuItems.filter(item => {
-        if ((item.key === 'employees' || item.key === 'dashboard') && this.role !== 'employee') {
+        if ((item.key === 'employees' || item.key === 'request') && this.role !== 'employee') {
           return false;
         }
         return true;

@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import AdminService from '@/services/adminService';
+import AdminService from '@/services/admin/adminStaffService';
 import ActivityPanel from '@/components/admin/dashboard/ActivityPanels.vue';
 import OverviewPanel from '@/components/admin/dashboard/OverviewPanels.vue';
 

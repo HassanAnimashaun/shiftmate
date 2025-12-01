@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import LoginService from '@/services/login';
+import LoginService from '@/services/auth/login';
 
 export default {
   data() {

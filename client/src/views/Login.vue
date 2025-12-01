@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import authService from '../services/login';
+import authService from '../services/auth/login';
 export default {
   name: 'Login-page',
   data() {
@@ -91,8 +91,10 @@ export default {
         this.error = '';
         if (user?.mustChangePassword) {
           this.$router.push('/set-password');
-        } else {
-          this.$router.push('/admin');
+        } else if (user?.role === 'admin') {
+          this.$router.push('/admin/dashboard');
+        } else if (user?.role === 'employee') {
+          this.$router.push('/employee');
         }
       } catch (err) {
         this.error = err.response?.data?.msg || 'Server error';

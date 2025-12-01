@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import authService from '@/services/login';
+import authService from '@/services/auth/login';
 
 export default {
   props: ['activeTab'],
@@ -44,7 +44,13 @@ export default {
           to: '/admin/employees',
           routeName: 'employees',
         },
-        // { key: 'timeoff', label: 'Time Off Requests', icon: '📝' },
+        {
+          key: 'timeoff',
+          label: 'Time Off Requests',
+          icon: '📝',
+          to: '/admin/request',
+          routeName: 'request',
+        },
         // { key: 'reports', label: 'Reports', icon: '📈' },
       ],
       role: null,

@@ -7,7 +7,9 @@ const { connectDB } = require("./db");
 
 const authRoutes = require("./routes/authRoutes");
 const adminStaffRoutes = require("./routes/admin/staffManagementRoutes");
+const adminTimeOffRoutes = require("./routes/admin/timeOffRoutes");
 const employeeProfileRoutes = require("./routes/employee/profileRoutes");
+const employeeTimeOffRoutes = require("./routes/employee/timeOffRoutes");
 
 const app = express();
 
@@ -31,10 +33,16 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// 3️⃣ ROUTES MUST BE HERE (BEFORE LISTEN)
+// AUTH
 app.use("/api/auth", authRoutes);
+
+// ADMIN ROUTES
 app.use("/api/admin/staff", adminStaffRoutes);
+app.use("/api/admin/timeoff", adminTimeOffRoutes);
+
+// EMPLOYEE ROUTES
 app.use("/api/employee", employeeProfileRoutes);
+app.use("/api/employee/timeoff", employeeTimeOffRoutes);
 
 // 4️⃣ START SERVER + CONNECT DB
 const PORT = process.env.PORT || 5000;

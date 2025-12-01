@@ -29,13 +29,13 @@ export default {
   },
   data() {
     return {
-      activeTab: 'dashboard',
+      activeTab: 'employee',
     };
   },
   methods: {
     setTab(tab) {
       this.activeTab = tab;
-      if (tab === 'dashboard' && this.$route.name !== 'EmployeeDashboard-page') {
+      if (tab === 'employee' && this.$route.name !== 'EmployeeDashboard-page') {
         this.$router.push({ name: 'EmployeeDashboard-page' });
       }
     },
