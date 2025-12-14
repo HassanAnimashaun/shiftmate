@@ -1,5 +1,6 @@
 import EmployeeDashboard from '@/views/employee/EmployeeDashboard.vue';
 import RequestTimeOff from '@/components/employee/requestTimeOff/RequestTimeOff.vue';
+import MyRequestTimeOff from '@/components/employee/myRequest/MyRequestView.vue';
 
 export const employeeRoutes = {
   path: '/employee',
@@ -8,11 +9,19 @@ export const employeeRoutes = {
   children: [
     {
       path: '',
+      redirect: { name: 'employee-request' },
+    },
+    {
+      path: 'request',
       name: 'employee-request',
       component: RequestTimeOff,
     },
+    {
+      path: 'employeeMyRequest',
+      name: 'employee-myrequest',
+      component: MyRequestTimeOff,
+    },
   ],
-  alias: '/employee/dashboard',
   meta: { requiresAuth: true, requiresEmploymentType: 'employee' },
 };
 

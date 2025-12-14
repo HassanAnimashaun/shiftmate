@@ -90,7 +90,6 @@ export default {
 
     closeForm() {
       this.showForm = false;
-
       this.selectedEmployee = null;
     },
 
@@ -101,7 +100,6 @@ export default {
         return;
       }
 
-      // ⭐ Otherwise normal behavior
       await this.fetchEmployees();
       this.closeForm();
     },

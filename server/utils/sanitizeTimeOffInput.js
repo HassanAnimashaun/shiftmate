@@ -1,7 +1,7 @@
 function sanitizeTimeOffInput(body, { isAdmin = false } = {}) {
   const sanitized = {};
 
-  const allowedTypes = ["vaction", "sick", "personal", "other"];
+  const allowedTypes = ["vacation", "sick", "personal", "emergency"];
 
   if (typeof body.type === "string") {
     const trimmed = body.type.trim().toLowerCase();

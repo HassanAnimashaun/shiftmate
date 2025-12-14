@@ -1,66 +1,57 @@
 <template>
   <div class="flex flex-col gap-4">
     <div
-      v-for="req in request"
-      :key="req.id || req._id"
+      v-for="my in myRequests"
+      :key="my.id || my._id"
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gradient-to-r from-orange-100 to-orange-200 rounded-xl px-6 py-4 shadow-sm hover:shadow-md transition"
     >
-      <div>
+      <div class="flex flex-col">
         <h2 class="text-black font-semibold text-lg">
-          {{ req.employee?.name || 'Unknown Employee' }}
+          {{ formatDateRange(my.startDate, my.endDate) }}
         </h2>
 
-        <span class="text-gray-700 text-sm">
-          {{ formatDateRange(req.startDate, req.endDate) }} | {{ formatRequestType(req.type) }}
-        </span>
+        <span class="text-gray-700 text-sm"> {{ getDisplayRequestType(my) }} </span>
 
-        <p>
-          <em>{{ req.reason }}</em>
-        </p>
+        <span v-if="my.reason" class="text-black-700 italic"> "{{ my.reason }}" </span>
       </div>
 
       <div class="flex gap-3 mt-3 sm:mt-0">
         <button
-          @click="$emit('approve', req.id, 'approved')"
           class="bg-gradient-to-r from-purple-500 to-indigo-400 text-white font-medium px-5 py-1.5 rounded-full text-sm shadow-sm hover:opacity-90 transition"
         >
-          Accept
-        </button>
-
-        <button
-          @click="$emit('deny', req.id, 'denied')"
-          class="bg-gradient-to-r from-purple-500 to-indigo-400 text-white font-medium px-5 py-1.5 rounded-full text-sm shadow-sm hover:opacity-90 transition"
-        >
-          Deny
+          {{ my.status }}
         </button>
       </div>
     </div>
 
-    <div v-if="request.length === 0" class="text-center py-8 text-gray-500 font-medium">
-      No employees found.
+    <div v-if="myRequests.length === 0" class="text-center py-8 text-gray-500 font-medium">
+      No requests found.
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'requestList',
-  emits: ['approve', 'deny'],
+  name: 'RequestPanels',
   props: {
-    request: Array,
+    myRequests: Array,
   },
   methods: {
     formatDateRange(startDate, endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      const month = start.toLocaleString('en-US', { month: 'short' });
+      const month = start.toLocaleString('en-US', { month: 'long' });
       const startDay = start.getDate();
       const endDay = end.getDate();
       const year = start.getFullYear();
 
       return `${month} ${startDay}-${endDay}, ${year}`;
     },
+    getDisplayRequestType(my) {
+      return `${this.formatRequestType(my.type)} | Submitted ${this.formatDateSubmited(my.createdAt)}`;
+    },
+
     formatRequestType(type) {
       if (!type) return 'Personal';
       const lookup = {
@@ -70,6 +61,15 @@ export default {
         emergency: 'Emergency',
       };
       return lookup[type] || type;
+    },
+
+    formatDateSubmited(createdAt) {
+      const date = new Date(createdAt);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
     },
   },
 };

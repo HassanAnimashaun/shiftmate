@@ -2,7 +2,10 @@
   <div class="p-6 bg-white rounded-2xl shadow-md flex-1">
     <div>
       <form @submit.prevent="submitTimeOff">
-        <h1>Request Time Off</h1>
+        <div class="flex flex-col items-start mb-3 gap-3">
+          <h2 class="text-2xl font-semibold text-gray-800">Request Time Off</h2>
+        </div>
+
         <!-- START DATE -->
         <div>
           <label for="startDate" class="block text-sm pb-2 font-medium text-gray-700"
@@ -12,6 +15,7 @@
             v-model="form.startDate"
             type="date"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            required
           />
         </div>
         <!-- End DATE -->
@@ -21,6 +25,7 @@
             v-model="form.endDate"
             type="date"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            required
           />
         </div>
 
@@ -33,9 +38,10 @@
             id="requestType"
             v-model="form.type"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            required
           >
             <option disabled value="">Select type</option>
-            <option value="vaction">Vaction</option>
+            <option value="vacation">Vacation</option>
             <option value="sick">Sick-Leave</option>
             <option value="personal">Personal</option>
             <option value="emergency">Emergency</option>

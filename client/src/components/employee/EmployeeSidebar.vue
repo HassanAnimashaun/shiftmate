@@ -36,6 +36,13 @@ export default {
           to: { name: 'employee-request' },
           routeName: 'employee-request',
         },
+        {
+          key: 'myrequest',
+          label: 'My Request',
+          icon: '📋',
+          to: { name: 'employee-myrequest' },
+          routeName: 'employee-myrequest',
+        },
       ],
       role: null,
     };

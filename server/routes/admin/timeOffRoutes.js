@@ -19,7 +19,10 @@ router.get("/", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const db = await connectDB();
 
-    const requests = await db.collection("timeOffRequests").find().toArray();
+    const requests = await db
+      .collection("timeOffRequests")
+      .find({ status: "pending" })
+      .toArray();
     if (requests.length === 0) return res.status(200).json([]);
 
     const staffIds = [...new Set(requests.map((r) => r.staffId))].map(
@@ -59,5 +62,47 @@ router.get("/count", verifyToken, requireRole("admin"), async (req, res) => {
     res.status(500).json({ msg: "Failed to fetch request" });
   }
 });
+
+// PATCH /api/admin/timeoff/:id/status - changes status of time off request
+router.patch(
+  "/:id/status",
+  verifyToken,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ msg: "Invalid request id" });
+      }
+
+      const valid = ["approved", "pending", "denied"];
+
+      if (!valid.includes(status)) {
+        return res.status(400).json({ msg: "Invalid status update" });
+      }
+
+      const db = await connectDB();
+
+      const result = await db
+        .collection("timeOffRequests")
+        .findOneAndUpdate(
+          { _id: new ObjectId(id), status: { $ne: status } },
+          { $set: { status, updatedAt: new Date() } },
+          { returnDocument: "after" }
+        );
+
+      if (!result.value) {
+        return res.status(200).json({ msg: "Status already set" });
+      }
+
+      return res.json({ msg: "Status updated", request: result.value });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ msg: "Server error" });
+    }
+  }
+);
 
 module.exports = router;

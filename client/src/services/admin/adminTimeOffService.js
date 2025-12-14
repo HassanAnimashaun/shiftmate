@@ -8,6 +8,9 @@ const AdminTimeOffService = {
   getPendingCount() {
     return api.get('/admin/timeoff/count');
   },
+  updateRequestStatus(id, status) {
+    return api.patch(`/admin/timeoff/${id}/status`, { status });
+  },
 };
 
 export default AdminTimeOffService;

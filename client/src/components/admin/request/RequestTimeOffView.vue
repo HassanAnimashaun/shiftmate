@@ -9,7 +9,7 @@
     </p>
     <p v-else-if="loading" class="mb-4 text-sm text-gray-500">Loading Request Time Off...</p>
 
-    <requestList v-if="!loading" :request="request" />
+    <requestList v-if="!loading" :request="request" @approve="updateStatus" @deny="updateStatus" />
   </div>
 </template>
 
@@ -22,6 +22,7 @@ export default {
   data() {
     return {
       request: [],
+      selectedRequest: null,
       loading: false,
       error: '',
     };
@@ -43,6 +44,16 @@ export default {
         this.request = [];
       }
       this.loading = false;
+    },
+    async updateStatus(id, status) {
+      try {
+        console.log('ID RECEIVED:', id);
+        console.log('status updated to: ', status);
+        await AdminTimeOffService.updateRequestStatus(id, status);
+        this.request = this.request.filter(r => (r.id || r._id) !== id);
+      } catch (err) {
+        console.log('Failed to update request', err);
+      }
     },
   },
 };
