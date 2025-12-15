@@ -8,6 +8,7 @@ const { connectDB } = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const adminStaffRoutes = require("./routes/admin/staffManagementRoutes");
 const adminTimeOffRoutes = require("./routes/admin/timeOffRoutes");
+const adminLocationsRoutes = require("./routes/admin/locationsRoutes");
 const employeeProfileRoutes = require("./routes/employee/profileRoutes");
 const employeeTimeOffRoutes = require("./routes/employee/timeOffRoutes");
 
@@ -39,6 +40,7 @@ app.use("/api/auth", authRoutes);
 // ADMIN ROUTES
 app.use("/api/admin/staff", adminStaffRoutes);
 app.use("/api/admin/timeoff", adminTimeOffRoutes);
+app.use("/api/admin/location", adminLocationsRoutes);
 
 // EMPLOYEE ROUTES
 app.use("/api/employee", employeeProfileRoutes);

@@ -2,6 +2,7 @@ import AdminDashboardLayout from '@/views/admin/AdminDashboard.vue';
 import EmployeesView from '@/components/admin/employees/EmployeesView.vue';
 import DashboardViews from '@/components/admin/dashboard/DashboardView.vue';
 import RequestTimeOff from '@/components/admin/request/RequestTimeOffView.vue';
+import ScheduleView from '@/components/admin/schedule/ScheduleView.vue';
 
 export const adminRoutes = {
   path: '/admin',
@@ -16,6 +17,11 @@ export const adminRoutes = {
       path: 'dashboard',
       name: 'dashboard',
       component: DashboardViews,
+    },
+    {
+      path: 'schedule',
+      name: 'schedule',
+      component: ScheduleView,
     },
     {
       path: 'employees',

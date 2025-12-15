@@ -36,7 +36,13 @@ export default {
           to: '/admin/dashboard',
           routeName: 'dashboard',
         },
-        // { key: 'schedule', label: 'Schedule', icon: '📅' },
+        {
+          key: 'schedule',
+          label: 'Schedule',
+          icon: '📅',
+          to: '/admin/schedule',
+          routeName: 'schedule',
+        },
         {
           key: 'employees',
           label: 'Employees',
