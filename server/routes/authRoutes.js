@@ -7,13 +7,14 @@ const { connectDB } = require("../db");
 const JWT = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
 const verifyToken = require("../middleware/authMiddleware");
-
-const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 const JWT_SECRET = process.env.JWT_SECRET;
+const isProd = process.env.NODE_ENV === "production";
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
   path: "/",
 };
 
@@ -70,8 +71,7 @@ router.post("/login", async (req, res) => {
 
     // Accept the plain temp OTP/password as a fallback (for freshly created accounts)
     const matchesTempSecret =
-      !isMatch &&
-      (provided === user.tempOtp || provided === user.tempPassword);
+      !isMatch && (provided === user.tempOtp || provided === user.tempPassword);
 
     if (!isMatch && matchesTempSecret) {
       // Re-hash and persist so subsequent logins use the hashed value
