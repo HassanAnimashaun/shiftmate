@@ -1,7 +1,17 @@
-const { MongoClient } = require("mongodb");
-require("dotenv").config();
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
-const client = new MongoClient(process.env.MONGODB_URI);
+const { MongoClient } = require("mongodb");
+
+if (!process.env.MONGODB_URI) {
+  throw new Error("MONGODB_URI is not defined");
+}
+
+const client = new MongoClient(process.env.MONGODB_URI, {
+  maxPoolSize: 10,
+});
+
 const dbName = process.env.DB_NAME;
 
 async function connectDB() {
@@ -15,4 +25,4 @@ async function connectDB() {
   }
 }
 
-module.exports = { connectDB, client }; // <-- note the object export
+module.exports = { connectDB, client };

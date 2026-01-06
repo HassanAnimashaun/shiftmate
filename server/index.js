@@ -1,4 +1,6 @@
-require("dotenv").config();
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const express = require("express");
 const cors = require("cors");
@@ -22,39 +24,44 @@ const allowedOrigins = rawClientOrigins
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-// 1️⃣ CORS FIRST
+// CORS
 app.use(
   cors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : undefined,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// 2️⃣ Body parsers
+// Parsers
 app.use(express.json());
 app.use(cookieParser());
 
-// AUTH
-app.use("/api/auth", authRoutes);
+// Health check (for Render)
+app.get("/health", (req, res) => res.json({ ok: true }));
 
-// ADMIN ROUTES
+// Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/admin/staff", adminStaffRoutes);
 app.use("/api/admin/timeoff", adminTimeOffRoutes);
 app.use("/api/admin/location", adminLocationsRoutes);
-
-// EMPLOYEE ROUTES
 app.use("/api/employee", employeeProfileRoutes);
 app.use("/api/employee/timeoff", employeeTimeOffRoutes);
 
-// 4️⃣ START SERVER + CONNECT DB
+// Start
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, async () => {
+async function start() {
   try {
     await connectDB();
-    console.log(`Listening on port ${PORT}`);
+    app.listen(PORT, () => {
+      console.log(`Listening on port ${PORT}`);
+    });
   } catch (err) {
-    console.log("Failed to connect", err);
+    console.error("Failed to connect", err);
     process.exit(1);
   }
-});
+}
+
+start();
