@@ -2,7 +2,7 @@
 
 A full-stack workforce scheduling platform that helps businesses manage employee shifts, availability, and assignments from one dashboard.
 
-🔗 **[Live Demo](https://your-shiftmate-vercel-url.vercel.app)**
+🔗 **[Live Demo](https://shiftmate-eilz.vercel.app/login)**
 
 ---
 
