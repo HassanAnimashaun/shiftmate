@@ -11,8 +11,11 @@ const authRoutes = require("./routes/authRoutes");
 const adminStaffRoutes = require("./routes/admin/staffManagementRoutes");
 const adminTimeOffRoutes = require("./routes/admin/timeOffRoutes");
 const adminLocationsRoutes = require("./routes/admin/locationsRoutes");
+const adminScheduleRoutes = require("./routes/admin/scheduleRoutes");
+const { ensureScheduleIndexes, seedDefaultTemplates } = require("./services/scheduleService");
 const employeeProfileRoutes = require("./routes/employee/profileRoutes");
 const employeeTimeOffRoutes = require("./routes/employee/timeOffRoutes");
+const employeeScheduleRoutes = require("./routes/employee/scheduleRoutes");
 
 const app = express();
 
@@ -46,8 +49,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin/staff", adminStaffRoutes);
 app.use("/api/admin/timeoff", adminTimeOffRoutes);
 app.use("/api/admin/location", adminLocationsRoutes);
+app.use("/api/admin/schedule", adminScheduleRoutes);
 app.use("/api/employee", employeeProfileRoutes);
 app.use("/api/employee/timeoff", employeeTimeOffRoutes);
+app.use("/api/employee/schedule", employeeScheduleRoutes);
 
 // Start
 const PORT = process.env.PORT || 5000;
@@ -55,6 +60,8 @@ const PORT = process.env.PORT || 5000;
 async function start() {
   try {
     await connectDB();
+    await ensureScheduleIndexes();
+    await seedDefaultTemplates();
     app.listen(PORT, () => {
       console.log(`Listening on port ${PORT}`);
     });

@@ -30,6 +30,13 @@ export default {
     return {
       menuItems: [
         {
+          key: 'schedule',
+          label: 'My Schedule',
+          icon: '📅',
+          to: { name: 'employee-schedule' },
+          routeName: 'employee-schedule',
+        },
+        {
           key: 'request',
           label: 'Request Time Off',
           icon: '🏖️',

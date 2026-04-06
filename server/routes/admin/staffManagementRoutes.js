@@ -206,11 +206,11 @@ router.put("/:id", async (req, res) => {
       { returnDocument: "after", projection: { password: 0 } }
     );
 
-    if (!result.value) {
+    if (!result) {
       return res.status(404).json({ msg: "Staff member not found" });
     }
 
-    res.status(200).json(sanitizeStaffMember(result.value));
+    res.status(200).json(sanitizeStaffMember(result));
   } catch (err) {
     console.error("Failed to update staff", err);
     res.status(500).json({ msg: "Failed to update staff" });
